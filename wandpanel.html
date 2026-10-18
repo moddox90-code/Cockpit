@@ -284,6 +284,7 @@ async function connect(silent){
   try{
     const [devs,zones]=await Promise.all([api("/api/manager/devices/device/"),api("/api/manager/zones/zone/")]);
     S.devices=Object.values(devs).map(d=>mapDevice(d,zones));
+    if(DEBUG)S.raw=Object.values(devs).map(d=>({n:d.name,cls:d.class,vcls:d.virtualClass||"",drv:d.driverId||d.driverUri||"",caps:Object.keys(d.capabilitiesObj||{}).join(", "),t:(S.devices.find(x=>x.id===d.id)||{}).t}));
     S.mode="live";S.err="";
     api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
     Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
@@ -418,8 +419,13 @@ function swTile(d,kind){
   return can?`<button class="sw ${kind}${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}">${inner}</button>`:`<div class="sw ${kind}${off}">${inner}</div>`;
 }
 const fmtW=w=>w==null?"–":(Math.round(w*10)/10).toString().replace(".",",");
+const DEBUG=/[?&]debug/.test(location.search);
 function areaHTML(){
   const a=$("#area");
+  if(DEBUG){a.className="area";a.style.overflow="auto";a.style.display="block";
+    if(!S.raw)return'<div class="sub">Warte auf Homey …</div>';
+    const r=S.raw.slice().sort((x,y)=>(/^EF/i.test(y.n)-/^EF/i.test(x.n))||x.n.localeCompare(y.n));
+    return`<div style="font:13px/1.35 monospace;white-space:pre-wrap;padding:8px">${r.length} Geräte von Homey\n\n${r.map(d=>esc(`${d.n} | Klasse: ${d.cls}${d.vcls?" / "+d.vcls:""} | Panel: ${d.t}\n   Fähigkeiten: ${d.caps}`)).join("\n")}</div>`}
   if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||`<div class="sub">${S.mode==="connecting"?"Verbinde mit Homey …":"Keine Heizungen gefunden."}</div>`}
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
   return list.map(d=>swTile(d,TAB)).join("")||`<div class="sub">${S.mode==="connecting"?"Verbinde mit Homey …":"Keine Geräte gefunden."}</div>`;

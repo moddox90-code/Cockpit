@@ -254,12 +254,16 @@ function mapDevice(d,zones){
   const c=d.capabilitiesObj||{},v=k=>c[k]?c[k].value:undefined;
   const info=[d.name,d.driverId,d.driverUri,d.ownerUri,d.class].join(" ");
   let t=CLS[d.virtualClass||d.class]||"router";
+  /* Schalter: normal "onoff"; Ecoflow-Smart-Plugs nutzen stattdessen "switchstate" */
+  const sw=["onoff","switchstate"].find(k=>c[k]&&typeof c[k].value==="boolean");
+  const swSet=["onoff","switchstate","set_power_supply_smartplug"].find(k=>c[k]&&c[k].setable!==false&&(c[k].type==="boolean"||typeof c[k].value==="boolean"));
   if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
-  /* Ecoflow-Smart-Plugs u. ä. melden oft keine Klasse "socket": schaltbar + Leistungsmessung = Steckdose */
-  else if((t==="router"||t==="sensor")&&c.onoff&&c.measure_power)t="socket";
-  else if(/^EF[\s-]/.test(d.name)&&c.onoff)t="socket";
+  else if(c.power_supply_priority_smartplug||c.set_power_supply_smartplug)t="socket"; /* Ecoflow Smart Plug */
+  else if((t==="router"||t==="sensor")&&sw&&c.measure_power)t="socket";
+  else if(/^EF[\s-]/.test(d.name)&&sw)t="socket";
   const o={id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
-  if(v("onoff")!==undefined)o.on=!!v("onoff");
+  if(sw)o.on=!!v(sw);else if(t==="socket"&&swSet)o.on=!!v(swSet);
+  if(swSet)o.swCap=swSet;
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
   if(v("target_temperature")!=null)o.temp=v("target_temperature");
   if(v("measure_temperature")!=null)o.cur=v("measure_temperature");
@@ -371,7 +375,7 @@ function settingsModal(){
   </div></div>`;
 }
 async function toggle(d,val){const prev=d.on,pw=d.w;d.on=val==null?!d.on:val;d.w=d.on?(d.base||0):0;render();
-  if(await setCap(d,"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
+  if(await setCap(d,d.swCap||"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
 function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
 let wakeLock=null;
 async function applyWake(){try{if(store.get("wake",false)&&"wakeLock" in navigator&&document.visibilityState==="visible"){wakeLock=await navigator.wakeLock.request("screen")}else if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}

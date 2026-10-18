@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zuhause">
+<meta name="theme-color" content="#0b0e13">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Davids Zuhause</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: wall-panel cockpit — sidebar + top bar, 3-col card grid; iPad landscape gets larger touch targets; phone gets bottom bar + stacked cards. Dark-only by choice. */
+:root{
+  --bg:#0b0e13; --panel:#12161f; --card:#171c26; --card-hi:#1f2633; --edge:#242c3a;
+  --fg:#e9edf5; --muted:#8a93a6; --dim:#5d6678;
+  --blue:#4c8dff; --amber:#ffbf3c; --teal:#3fd0b4; --violet:#8b7bff; --red:#ff6370; --green:#46c37b;
+  --font:"Figtree",system-ui,-apple-system,sans-serif; --r:16px; --pad:16px; color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--fg)}
+body{font-family:var(--font);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums;transition:filter .6s}
+body.night{filter:brightness(.6) saturate(.8)}
+button,input{font:inherit;color:inherit}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100%}
+aside{background:var(--panel);border-right:1px solid var(--edge);padding:18px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;height:100dvh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:15px}
+.brand i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;color:#fff;flex:none}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;border:0;background:none;color:var(--muted);cursor:pointer;text-align:left;font-weight:500;width:100%}
+.nav:hover{background:var(--card)}
+.nav[aria-current="page"]{background:rgba(76,141,255,.14);color:var(--fg)}
+.nav[aria-current="page"] svg{color:var(--blue)}
+.nav.first-bottom{margin-top:auto}
+main{min-width:0;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px 20px}
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:14px 0 16px;position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 78%,transparent)}
+.bar-l{display:flex;align-items:center;gap:12px;min-width:0}
+.bar h1{font-size:17px;font-weight:600;margin:0}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);border:1px solid var(--edge);border-radius:999px;padding:4px 10px;background:none;cursor:pointer;white-space:nowrap}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.conn.live i{background:var(--green);box-shadow:0 0 8px var(--green)}
+.conn.err i{background:var(--red)}
+.clock{display:flex;align-items:baseline;gap:10px}
+.clock b{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.clock span{color:var(--muted);font-size:13px}
+.bar-r{justify-self:end;display:flex;align-items:center;gap:8px}
+.wx-mini{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
+.icobtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--edge);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.icobtn[aria-pressed="true"]{color:var(--amber);border-color:rgba(255,191,60,.4)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.card{background:var(--card);border:1px solid var(--edge);border-radius:var(--r);padding:var(--pad);min-width:0;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:9px}
+.card h2 .hi{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+.card h2 small{margin-left:auto;font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
+.c-amber{background:rgba(255,191,60,.15);color:var(--amber)}.c-blue{background:rgba(76,141,255,.15);color:var(--blue)}
+.c-teal{background:rgba(63,208,180,.14);color:var(--teal)}.c-violet{background:rgba(139,123,255,.16);color:var(--violet)}
+.c-red{background:rgba(255,99,112,.15);color:var(--red)}.c-green{background:rgba(70,195,123,.15);color:var(--green)}
+.span2{grid-column:span 2}
+/* weather */
+.wx{display:flex;align-items:center;gap:14px}
+.wx b{font-size:42px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.wx b sup{font-size:18px;font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;color:var(--muted);font-size:13px;align-items:center}
+.kv span:nth-child(3n){color:var(--fg);text-align:right}
+.fc{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--edge);padding-top:10px}
+.fc b{display:block;color:var(--fg);font-weight:600}
+/* lists */
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:10px;border:0;background:none;text-align:left;width:100%;min-width:0}
+button.li{cursor:pointer}
+button.li:hover{background:var(--card-hi)}
+.ico{width:32px;height:32px;border-radius:9px;background:var(--card-hi);display:grid;place-items:center;color:var(--muted);flex:none}
+.grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.grow small{display:block;color:var(--muted);font-size:12px}
+.val{font-weight:600;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);flex:none}
+/* media */
+.spk{display:flex;gap:6px;flex-wrap:wrap}
+.spk button{border:1px solid var(--edge);background:none;border-radius:999px;padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer}
+.spk button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.spk button:disabled{opacity:.4;cursor:not-allowed}
+.np{display:flex;gap:12px;align-items:center}
+.art{width:58px;height:58px;border-radius:12px;flex:none;background:conic-gradient(from 200deg,var(--violet),var(--blue),var(--teal),var(--violet));position:relative}
+.art::after{content:"";position:absolute;inset:22px;border-radius:50%;background:var(--card)}
+.art.spin{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.np small{color:var(--muted);display:block;font-size:12px}
+.ctrl{display:flex;justify-content:center;align-items:center;gap:24px}
+.ctrl button{border:0;background:none;cursor:pointer;color:var(--fg);display:grid;place-items:center;width:40px;height:40px}
+.ctrl .play{width:48px;height:48px;border-radius:50%;background:var(--fg);color:var(--bg)}
+.vol{display:flex;align-items:center;gap:10px;color:var(--muted)}
+input[type=range]{flex:1;accent-color:var(--blue);min-width:0}
+/* energy */
+.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.big b{font-size:32px;font-weight:600;letter-spacing:-.03em}
+.big span{color:var(--muted)}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--dim);font-size:9px;font-family:var(--font)}
+.chips{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.chips b{color:var(--fg)}
+.balance{height:10px;border-radius:5px;background:var(--card-hi);display:flex;overflow:hidden}
+.balance i{display:block;height:100%}
+/* scenes */
+.scenes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scene{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border-radius:12px;border:0;cursor:pointer;font-weight:600;text-align:left;min-height:84px;transition:transform .12s,filter .12s}
+.scene:hover{filter:brightness(1.15)}
+.scene:active{transform:scale(.97)}
+.s1{background:rgba(255,191,60,.15);color:#ffd27a}.s2{background:rgba(76,141,255,.15);color:#9cc0ff}
+.s3{background:rgba(139,123,255,.17);color:#bdb3ff}.s4{background:rgba(63,208,180,.12);color:#8de6d4}
+/* presence */
+.ppl{display:flex;flex-direction:column;gap:4px}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff}
+.badge{font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-home{background:rgba(70,195,123,.15);color:var(--green)}.b-away{background:var(--card-hi);color:var(--muted)}.b-sleep{background:rgba(139,123,255,.16);color:var(--violet)}
+/* climate */
+.thr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--edge)}
+.thr:last-child{border-bottom:0}
+.thr .grow small .low{color:var(--red)}
+.step{width:34px;height:34px;border-radius:9px;border:1px solid var(--edge);background:var(--card-hi);cursor:pointer;font-size:17px}
+.thr b{min-width:52px;text-align:center;font-size:16px}
+.gauge{display:flex;flex-direction:column;gap:6px}
+.gauge .tr{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--amber) 0 30%,var(--green) 30% 60%,var(--blue) 60%);position:relative;opacity:.85}
+.gauge .tr i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--fg);transform:translateX(-50%)}
+.gauge .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+/* vacuum */
+.vac{display:flex;align-items:center;gap:16px}
+.vring{width:76px;height:76px;flex:none}
+.vring text{fill:var(--fg);font-size:15px;font-weight:600;font-family:var(--font)}
+.vbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.vbtns button{border:1px solid var(--edge);background:var(--card-hi);border-radius:10px;padding:10px 6px;cursor:pointer;font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.vbtns button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+/* alerts */
+.al .tag{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.ok{display:flex;align-items:center;gap:10px;color:var(--muted);padding:6px}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.tile{border:1px solid var(--edge);background:var(--card-hi);border-radius:13px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;min-height:100px;transition:background .2s,border-color .2s;min-width:0}
+.tile .ti{color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.tile.on{background:rgba(255,191,60,.13);border-color:rgba(255,191,60,.4)}
+.tile.on .ti{color:var(--amber)}
+.tile b{font-weight:600;font-size:13px;overflow-wrap:anywhere}
+.tile small{color:var(--muted);font-size:12px;margin-top:auto}
+.tile.static{cursor:default}
+.tile.off-line{opacity:.55}
+.warnt{color:var(--red)!important}
+.sw{width:30px;height:18px;border-radius:999px;background:rgba(255,255,255,.14);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s}
+.tile.on .sw{background:var(--amber)}
+.tile.on .sw::after{transform:translateX(12px)}
+.th{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.th button{width:30px;height:30px;border-radius:8px;border:1px solid var(--edge);background:var(--card);cursor:pointer;font-size:16px}
+.th b{font-size:18px}
+.cam{aspect-ratio:16/9;max-width:100%;border-radius:12px;background:repeating-linear-gradient(135deg,#1a212d 0 10px,#171d28 10px 20px);display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:12px}
+.cam b{display:block;color:var(--fg);margin-bottom:4px}
+.rtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.rtabs button{border:1px solid var(--edge);background:var(--card);border-radius:999px;padding:8px 14px;cursor:pointer;color:var(--muted);font-weight:500}
+.rtabs button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.note{color:var(--dim);font-size:12px;margin-top:14px}
+/* settings dialog */
+.scrim{position:fixed;inset:0;background:rgba(4,6,10,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+.dlg{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:22px;width:min(460px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.dlg h3{margin:0;font-size:18px}
+.dlg p{margin:0;color:var(--muted);font-size:13px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:12px;font-weight:600;color:var(--muted)}
+.fld input{background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:11px 12px;font-size:15px;width:100%}
+.fld input:focus{outline:2px solid var(--blue);outline-offset:0}
+.fld small{color:var(--dim);font-size:12px}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:1px solid var(--edge);background:var(--card);border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.msg{font-size:13px;padding:10px 12px;border-radius:10px;background:var(--card)}
+.msg.err{background:rgba(255,99,112,.12);color:#ffb0b7}
+.msg.okm{background:rgba(70,195,123,.12);color:#9fe3bc}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
+.toggle-row input{width:20px;height:20px;accent-color:var(--blue)}
+.toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* iPad / wall panel landscape: bigger touch */
+@media (min-width:1024px) and (pointer:coarse){
+  :root{--pad:20px;--r:20px}
+  body{font-size:15px}
+  .tile{min-height:116px}
+  .step,.th button{width:42px;height:42px}
+  .nav{padding:14px 12px}
+}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:1/-1}}
+@media (max-width:760px){
+  .shell{display:block}
+  aside{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;justify-content:space-around;gap:0;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--edge);z-index:10}
+  .brand,.nav.mob-hide{display:none}
+  .nav.first-bottom{margin-top:0}
+  .nav{flex-direction:column;gap:3px;font-size:11px;padding:7px 4px;justify-content:center;align-items:center;text-align:center}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+  .bar{grid-template-columns:1fr auto;top:env(safe-area-inset-top,0px)}
+  .bar h1,.clock{display:none}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="shell">
+  <aside aria-label="Navigation">
+    <div class="brand"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/></svg></i>Davids Zuhause</div>
+    <button class="nav" data-view="overview" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/></svg>Übersicht</button>
+    <button class="nav" data-view="rooms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>Räume</button>
+    <button class="nav" data-view="climate"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
+    <button class="nav" data-view="energy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Energie</button>
+    <button class="nav first-bottom" data-open="settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellungen</button>
+  </aside>
+  <main>
+    <div class="bar">
+      <div class="bar-l"><h1 id="vt">Übersicht</h1><button class="conn" id="conn" data-open="settings"><i></i><span>Demo</span></button></div>
+      <div class="clock"><b id="time">--:--</b><span id="date"></span></div>
+      <div class="bar-r">
+        <div class="wx-mini" id="wxmini"></div>
+        <button class="icobtn" id="nightbtn" aria-pressed="false" aria-label="Nachtmodus" title="Nachtmodus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+      </div>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+<div id="modal"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- Icons ---------- */
+const P={
+lamp:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+socket:'<rect x="4" y="4" width="16" height="16" rx="5"/><path d="M10 10v2M14 10v2"/>',
+speaker:'<rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7.5" r="1"/>',
+thermostat:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',
+vacuum:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
+camera:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+sensor:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>',
+solar:'<path d="M3 20l3-12h12l3 12zM9 8l-1 12M15 8l1 12M4.5 14h15"/>',
+air:'<path d="M3 8h12a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h17"/>',
+button:'<rect x="5" y="5" width="14" height="14" rx="3"/><circle cx="12" cy="12" r="2.5"/>',
+router:'<rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 13l-2-8M17 13l2-8"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z"/>',
+rain:'<path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7zM8 19l-1 2M12 19l-1 2M16 19l-1 2"/>',
+moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+away:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',
+film:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>',
+alert:'<path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+batt:'<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>',
+drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+wind:'<path d="M3 8h10a3 3 0 1 0-3-3M3 16h13a3 3 0 1 1-3 3M3 12h16"/>',
+home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+check:'<path d="M5 12l5 5L20 7"/>',
+play:'<path d="M7 4v16l13-8z" fill="currentColor"/>',
+stop:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+dock:'<path d="M3 11l9-7 9 7M5 10v10h14V10"/>',
+leaf:'<path d="M5 21c0-9 5-15 15-16-1 10-7 15-15 16zM5 21l7-7"/>'};
+const ic=(t,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[t]||P.sensor}</svg>`;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- Demo-Daten (aus deinen Screenshots) ---------- */
+const DEMO=[
+{n:"Lampe Büro",z:"Büro",t:"lamp",on:true,w:0},{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:21,cur:20.6,batt:70},
+{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked",warn:"Meldet einen Fehler"},{n:"TV Gästezimmer",z:"Büro",t:"socket",on:true,w:4},
+{n:"Smart Control Büro",z:"Büro",t:"button",batt:80},
+{n:"Ikea Lampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Lavalampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},
+{n:"Vitrine",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Strom Fernseher",z:"Wohnzimmer",t:"socket",on:true,w:31},
+{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Ecoflow",z:"Wohnzimmer",t:"socket",on:false,w:0},
+{n:"Fritzbox",z:"Wohnzimmer",t:"router"},
+{n:"LED Flur",z:"Flur",t:"lamp",on:false,w:0},{n:"Flur",z:"Flur",t:"socket",on:true,w:3},
+{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:6},{n:"Kamera: Flur",z:"Flur",t:"camera"},
+{n:"Küche",z:"Küche",t:"speaker",warn:"Nicht erreichbar"},
+{n:"Bad",z:"Badezimmer",t:"socket",on:false,w:0},{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:22,cur:21.3,batt:80},
+{n:"Badezimmer",z:"Badezimmer",t:"speaker"},
+{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:18,cur:18.9,batt:80},{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:2},
+{n:"Steckdose TV",z:"Gästezimmer",t:"socket",on:true,w:2},{n:"Steckdose Zelt",z:"Gästezimmer",t:"socket",on:true,w:12},
+{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:21.4,hum:52},
+{n:"Lampe Schlafzimmer",z:"Schlafzimmer",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer",t:"thermostat",temp:19,cur:18.4,batt:40},
+{n:"Schlafzimmer",z:"Schlafzimmer",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer",t:"button",batt:100},
+{n:"STREAM Solar System",z:"Heim",t:"solar",w:81,gen:true},{n:"EcoFlow STREAM",z:"Heim",t:"sensor",w:107}];
+const DEMO_USERS=[{name:"David",present:true,asleep:false}];
+const SOLAR_DEMO=[0,0,0,0,0,0,2,9,22,41,58,72,84,88,81,70,52,30,12,3,0,0,0,0];
+
+/* ---------- Zustand ---------- */
+const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("dz_"+k,JSON.stringify(v))}catch(e){}}};
+let cfg=store.get("cfg",{addr:"",key:"",city:""});
+let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),view:"overview",room:null,spk:null,vol:35,night:false,modal:null};
+const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
+function loadDemo(){S.devices=DEMO.map((d,i)=>({...d,id:"d"+i,base:d.w||({lamp:6,socket:5,air:8}[d.t]||0),caps:{}}));S.users=DEMO_USERS;S.mode="demo"}
+loadDemo();
+
+/* ---------- Homey Web API ---------- */
+function baseUrl(a){a=(a||"").trim().replace(/\/+$/,"");if(!a)return"";if(/^https?:\/\//.test(a))return a;
+  if(/^\d+\.\d+\.\d+\.\d+$/.test(a))return`https://${a.replace(/\./g,"-")}.homey.homeylocal.com`;return"https://"+a}
+async function api(path,opt={}){
+  const r=await fetch(baseUrl(cfg.addr)+path,{...opt,headers:{"Authorization":"Bearer "+cfg.key,"Content-Type":"application/json"}});
+  if(r.status===401||r.status===403)throw new Error("API-Schlüssel abgelehnt (fehlende Rechte?)");
+  if(!r.ok)throw new Error("Homey antwortet mit Fehler "+r.status);
+  const t=await r.text();return t?JSON.parse(t):null;
+}
+const CLS={light:"lamp",socket:"socket",thermostat:"thermostat",heater:"thermostat",vacuumcleaner:"vacuum",speaker:"speaker",tv:"speaker",camera:"camera",sensor:"sensor",solarpanel:"solar",battery:"solar",airpurifier:"air",airconditioning:"air",fan:"air",dehumidifier:"air",humidifier:"air",button:"button",remote:"button",other:"router"};
+function mapDevice(d,zones){
+  const c=d.capabilitiesObj||{},v=k=>c[k]?c[k].value:undefined;
+  const t=CLS[d.virtualClass||d.class]||"router";
+  const o={id:d.id,n:d.name,z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
+  if(v("onoff")!==undefined){o.on=!!v("onoff")}
+  const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
+  if(v("target_temperature")!=null)o.temp=v("target_temperature");
+  if(v("measure_temperature")!=null)o.cur=v("measure_temperature");
+  if(v("measure_humidity")!=null)o.hum=Math.round(v("measure_humidity"));
+  if(v("measure_battery")!=null)o.batt=Math.round(v("measure_battery"));
+  if(v("measure_pm25")!=null)o.pm=Math.round(v("measure_pm25"));
+  if(v("vacuumcleaner_state")!=null)o.vstate=v("vacuumcleaner_state");
+  if(v("speaker_playing")!=null)o.playing=!!v("speaker_playing");
+  if(v("volume_set")!=null)o.vol=Math.round(v("volume_set")*100);
+  if(v("speaker_track")!=null)o.track=v("speaker_track");
+  if(v("speaker_artist")!=null)o.artist=v("speaker_artist");
+  if(t==="solar")o.gen=true;
+  if(d.available===false)o.warn=d.unavailableMessage||"Nicht erreichbar";
+  else if(v("alarm_battery")===true&&o.batt==null)o.warn="Batterie schwach";
+  o.base=o.w||6;return o;
+}
+async function connect(silent){
+  if(!cfg.addr||!cfg.key){loadDemo();render();return}
+  if(sandboxed){S.mode="demo";S.err="In dieser Vorschau sind Verbindungen gesperrt. Öffne die App-Datei auf deinem iPad im Heimnetz.";render();return}
+  try{
+    const [devs,zones]=await Promise.all([api("/api/manager/devices/device/"),api("/api/manager/zones/zone/")]);
+    S.devices=Object.values(devs).map(d=>mapDevice(d,zones));
+    S.mode="live";S.err="";
+    api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
+    Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
+      .then(([a,b])=>{S.flows=[...Object.values(a).map(f=>({id:f.id,name:f.name,adv:false})),...Object.values(b).map(f=>({id:f.id,name:f.name,adv:true}))]});
+    if(!S.histLive){S.solarHist=Array(24).fill(0);S.histLive=true}const now=new Date().getHours();S.solarHist[now]=Math.max(S.solarHist[now],solarNow());
+    if(!silent)toast("Mit Homey verbunden");
+  }catch(e){
+    S.mode="error";S.err=e.message==="Failed to fetch"||e.name==="TypeError"?"Homey nicht erreichbar. Bist du im Heimnetz und stimmt die Adresse?":e.message;
+    if(!S.devices.length||!S.devices[0].live)loadDemo();S.mode="error";
+  }
+  render();
+}
+async function setCap(d,cap,value,revert){
+  if(S.mode!=="live")return true;
+  try{await api(`/api/manager/devices/device/${d.id}/capability/${cap}`,{method:"PUT",body:JSON.stringify({value})});return true}
+  catch(e){revert&&revert();toast("Fehler: "+e.message);render();return false}
+}
+async function triggerFlow(name){
+  const f=S.flows.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+  if(!f){toast(`Lege in Homey einen Flow „${name}“ an`);return false}
+  try{await api(`/api/manager/flow/${f.adv?"advancedflow":"flow"}/${f.id}/trigger`,{method:"POST",body:"{}"});toast(`Flow „${name}“ gestartet`);setTimeout(()=>connect(true),1500);return true}
+  catch(e){toast("Fehler: "+e.message);return false}
+}
+
+/* ---------- Wetter (Open-Meteo, ohne Schlüssel) ---------- */
+const WMO=c=>c===0?["sun","Sonnig"]:c<=2?["sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
+async function loadWeather(){
+  if(!cfg.city||sandboxed){S.weather=null;return}
+  try{
+    const g=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=${encodeURIComponent(cfg.city)}`)).json();
+    const p=g.results&&g.results[0];if(!p)throw 0;
+    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
+    S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,
+      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]}))};
+  }catch(e){S.weather=null}
+  render();
+}
+
+/* ---------- Helfer ---------- */
+const $=s=>document.querySelector(s);
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)};
+const fT=v=>v==null?"–":(+v).toFixed(1).replace(".",",");
+const dev=id=>S.devices.find(d=>d.id===id);
+const solarNow=()=>S.devices.filter(d=>d.gen).reduce((m,d)=>Math.max(m,d.w||0),0);
+const useNow=()=>S.devices.filter(d=>d.on&&!d.gen).reduce((s,d)=>s+(d.w||0),0);
+const zones=()=>{const c={};S.devices.forEach(d=>c[d.z]=(c[d.z]||0)+1);return Object.keys(c).filter(z=>z!=="Heim"&&z!=="Ohne Raum").sort((a,b)=>c[b]-c[a])};
+const alerts=()=>S.devices.filter(d=>d.warn).map(d=>({d,kind:"bad",txt:d.warn}))
+  .concat(S.devices.filter(d=>!d.warn&&d.batt!=null&&d.batt<=40&&d.t!=="vacuum").map(d=>({d,kind:"mid",txt:`Batterie ${d.batt} %`})));
+const H=(icon,cls,title,small)=>`<h2><span class="hi ${cls}">${ic(icon,15)}</span>${title}${small?`<small>${small}</small>`:""}</h2>`;
+const demoTag=()=>S.mode==="live"?"":"Beispiel";
+
+/* ---------- Karten ---------- */
+function weatherCard(){
+  const w=S.weather;
+  const d=w||{place:"Beispiel",t:14,feel:12,hum:64,wind:3,code:1,hours:[["Jetzt",1,14],["13 Uhr",1,15],["14 Uhr",3,15],["15 Uhr",3,14],["16 Uhr",61,13],["17 Uhr",1,12]].map(x=>({h:x[0],code:x[1],t:x[2]}))};
+  const [i,txt]=WMO(d.code);
+  return`<section class="card">${H("sun","c-amber","Wetter",w?esc(d.place):"Beispiel")}
+   <div class="wx"><span style="color:${i==="sun"?"var(--amber)":"var(--muted)"}">${ic(i,50)}</span><div><b>${Math.round(d.t)}<sup>°C</sup></b><div style="color:var(--muted)">${txt}</div></div></div>
+   <div class="kv"><span>${ic("thermostat",15)}</span><span>Gefühlt</span><span>${Math.round(d.feel)} °C</span><span>${ic("drop",15)}</span><span>Luftfeuchte</span><span>${Math.round(d.hum)} %</span><span>${ic("wind",15)}</span><span>Wind</span><span>${Math.round(d.wind)} m/s</span></div>
+   <div class="fc">${d.hours.slice(0,6).map((h,k)=>{const [hi]=WMO(h.code);return`<div>${k===0&&!w?"Jetzt":h.h}<div style="color:${hi==="sun"?"var(--amber)":"var(--muted)"};margin:4px 0">${ic(hi,16)}</div><b>${Math.round(h.t)}°</b></div>`}).join("")}</div></section>`;
+}
+function roomsCard(){
+  return`<section class="card">${H("home","c-blue","Räume","Ist / Soll")}<div class="list">${zones().map(z=>{
+    const ds=S.devices.filter(d=>d.z===z),th=ds.find(d=>d.t==="thermostat"),sens=ds.find(d=>d.cur!=null),lit=ds.filter(d=>d.t==="lamp"&&d.on).length;
+    return`<button class="li" data-room="${esc(z)}"><span class="ico">${ic(th?"thermostat":"lamp",16)}</span><span class="grow">${esc(z)}<small>${lit?`${lit} Licht an · `:""}${ds.length} Geräte</small></span>${lit?'<span class="dot"></span>':""}<span class="val">${sens?fT(sens.cur)+"°":""}${th?` <span style="color:var(--dim);font-weight:500">/ ${fT(th.temp)}°</span>`:""}</span></button>`}).join("")}</div></section>`;
+}
+function mediaCard(){
+  const spk=S.devices.filter(d=>d.t==="speaker");if(!spk.length)return"";
+  if(!S.spk||!dev(S.spk))S.spk=(spk.find(s=>!s.warn)||spk[0]).id;
+  const s=dev(S.spk),playing=!!s.playing,vol=s.vol??S.vol;
+  return`<section class="card">${H("music","c-violet","Medien","Chromecast")}
+   <div class="spk">${spk.map(x=>`<button data-spk="${x.id}" aria-pressed="${x.id===S.spk}" ${x.warn?"disabled title='Nicht erreichbar'":""}>${esc(x.z)}</button>`).join("")}</div>
+   <div class="np"><div class="art${playing?" spin":""}"></div><div style="min-width:0"><small>${esc(s.n)}</small><b>${esc(s.track||(playing?"Wiedergabe läuft":"Bereit"))}</b><small>${esc(s.artist||(S.mode==="live"?"":"Titel erscheinen live über Homey"))}</small></div></div>
+   <div class="ctrl"><button data-media="speaker_prev" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+    <button class="play" data-media="play" aria-label="${playing?"Pause":"Abspielen"}">${playing?'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>':ic("play",20)}</button>
+    <button data-media="speaker_next" aria-label="Weiter"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button></div>
+   <div class="vol">${ic("speaker",16)}<input id="vol" type="range" min="0" max="100" value="${vol}" aria-label="Lautstärke"><span id="volv">${vol}</span></div></section>`;
+}
+function chart(){
+  const W=320,Hh=140,pad=22,bw=(W-pad)/24,max=Math.max(100,...S.solarHist)*1.05,now=new Date().getHours();
+  const bars=S.solarHist.map((v,i)=>{const bh=v/max*(Hh-30);return`<rect x="${(pad+i*bw+1.5).toFixed(1)}" y="${(Hh-18-bh).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${Math.max(bh,1).toFixed(1)}" rx="2" fill="${i===now?"var(--amber)":i<now?"var(--blue)":"rgba(76,141,255,.25)"}"/>`}).join("");
+  const top=Math.round(max/50)*50||100;
+  const grid=[0,top/2,top].map(v=>{const y=Hh-18-v/max*(Hh-30);return`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--edge)"/><text x="0" y="${y+3}">${v}</text>`}).join("");
+  const lab=[0,6,12,18,23].map(i=>`<text x="${pad+i*bw+bw/2}" y="${Hh-4}" text-anchor="middle">${String(i).padStart(2,"0")}</text>`).join("");
+  return`<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Solarleistung pro Stunde in Watt">${grid}${bars}${lab}</svg>`;
+}
+function energyCard(span){
+  const sol=solarNow(),u=useNow(),kwh=(S.solarHist.reduce((a,b)=>a+b,0)/1000).toFixed(2).replace(".",",");
+  const tot=Math.max(sol,u,1);
+  return`<section class="card${span?" span2":""}">${H("solar","c-amber","Energie",S.mode==="live"?"Solar heute":"Beispielverlauf")}
+   <div class="big"><b>${kwh} kWh</b><span>Solar erzeugt</span></div>${chart()}
+   <div class="balance" title="Solar gegen Verbrauch"><i style="width:${Math.min(sol,u)/tot*100}%;background:var(--green)"></i><i style="width:${Math.max(0,sol-u)/tot*100}%;background:var(--amber)"></i><i style="width:${Math.max(0,u-sol)/tot*100}%;background:var(--red)"></i></div>
+   <div class="chips"><span>Solar jetzt <b>${sol} W</b></span><span>Verbrauch <b>${u} W</b></span><span>${sol>=u?"Überschuss":"Netzbezug"} <b>${Math.abs(sol-u)} W</b></span></div></section>`;
+}
+const SCENES=[["Guten Morgen","sun","s1"],["Außer Haus","away","s2"],["Filmabend","film","s3"],["Gute Nacht","moon","s4"]];
+function scenesCard(){
+  return`<section class="card">${H("leaf","c-teal","Szenen",S.mode==="live"?"Homey-Flows":"")}<div class="scenes">${SCENES.map(s=>`<button class="scene ${s[2]}" data-scene="${s[0]}">${ic(s[1],22)}${s[0]}</button>`).join("")}</div></section>`;
+}
+function presenceCard(){
+  const st=u=>u.asleep?["b-sleep","Schläft"]:u.present?["b-home","Zuhause"]:["b-away","Unterwegs"];
+  return`<section class="card">${H("users","c-green","Anwesenheit",S.mode==="live"?"":"Beispiel")}<div class="ppl">${S.users.map(u=>{const [c,t]=st(u);
+    return`<div class="li"><span class="av">${esc(u.name[0]||"?")}</span><span class="grow">${esc(u.name)}</span><span class="badge ${c}">${t}</span></div>`}).join("")}</div>
+   <small style="color:var(--dim)">Kommt aus den Homey-Benutzern und deren Standort.</small></section>`;
+}
+function climateCard(span){
+  const th=S.devices.filter(d=>d.t==="thermostat"),hum=S.devices.filter(d=>d.hum!=null),air=S.devices.filter(d=>d.t==="air");
+  const h=hum.length?Math.round(hum.reduce((a,b)=>a+b.hum,0)/hum.length):null;
+  return`<section class="card${span?" span2":""}">${H("thermostat","c-red","Klima","Heizung & Luft")}
+   <div>${th.map(d=>`<div class="thr"><span class="grow">${esc(d.z)}<small>Ist ${fT(d.cur)}° · ${d.batt!=null?`<span class="${d.batt<=40?"low":""}">Batterie ${d.batt} %</span>`:""}</small></span>
+     <button class="step" data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.z)} kälter">−</button><b>${fT(d.temp)}°</b><button class="step" data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.z)} wärmer">+</button></div>`).join("")}</div>
+   ${h!=null?`<div class="gauge"><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Luftfeuchte ${esc(hum.map(x=>x.z).join(", "))}</span><b>${h} %</b></div><div class="tr"><i style="left:${Math.min(100,h)}%"></i></div><div class="lab"><span>trocken</span><span>40–60 % ideal</span><span>feucht</span></div></div>`:""}
+   ${air.length?`<div class="tiles">${air.map(tile).join("")}</div>`:""}</section>`;
+}
+const VS={docked:"In der Station",charging:"Lädt",cleaning:"Saugt",spot_cleaning:"Saugt Bereich",stopped:"Angehalten"};
+function vacuumCard(){
+  const v=S.devices.find(d=>d.t==="vacuum");if(!v)return"";
+  const b=v.batt??0,C=2*Math.PI*30;
+  return`<section class="card">${H("vacuum","c-blue","Saugroboter",esc(v.z))}
+   <div class="vac"><svg class="vring" viewBox="0 0 76 76"><circle cx="38" cy="38" r="30" fill="none" stroke="var(--card-hi)" stroke-width="7"/><circle cx="38" cy="38" r="30" fill="none" stroke="var(--teal)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-b/100)}" transform="rotate(-90 38 38)"/><text x="38" y="43" text-anchor="middle">${b}%</text></svg>
+    <div class="grow"><b>${esc(v.n)}</b><small>${esc(VS[v.vstate]||"Bereit")}</small>${v.warn?`<small class="warnt">${esc(v.warn)}</small>`:""}</div></div>
+   <div class="vbtns"><button class="primary" data-vac="cleaning">${ic("play",16)}Saugen</button><button data-vac="stopped">${ic("stop",16)}Stopp</button><button data-vac="docked">${ic("dock",16)}Zur Station</button></div></section>`;
+}
+function alertsCard(){
+  const a=alerts();
+  return`<section class="card">${H("alert","c-red","Hinweise",a.length?`${a.length} offen`:"")}<div class="list">${a.length?a.map(x=>`<button class="li al" data-room="${esc(x.d.z)}"><span class="ico ${x.kind==="bad"?"c-red":"c-amber"}">${ic(x.kind==="bad"?"alert":"batt",16)}</span><span class="grow">${esc(x.d.n)}<small>${esc(x.txt)}</small></span><span class="tag">${esc(x.d.z)}</span></button>`).join(""):`<div class="ok">${ic("check")}Alles in Ordnung</div>`}</div></section>`;
+}
+function tile(d){
+  const off=d.warn&&d.t!=="vacuum"?" off-line":"";
+  if(d.t==="thermostat")return`<div class="tile static${off}"><span class="ti">${ic(d.t)}<small style="margin:0">Ist ${fT(d.cur)}°</small></span><b>${esc(d.n)}</b><div class="th"><button data-temp="${d.id}" data-d="-0.5" aria-label="Kälter">−</button><b>${fT(d.temp)}°</b><button data-temp="${d.id}" data-d="0.5" aria-label="Wärmer">+</button></div></div>`;
+  if('on' in d)return`<button class="tile${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}"><span class="ti">${ic(d.t)}<span class="sw"></span></span><b>${esc(d.n)}</b><small class="${d.warn?"warnt":""}">${esc(d.warn||(d.on?`An${d.w?` · ${d.w} W`:""}${d.pm!=null?` · PM2,5 ${d.pm}`:""}`:"Aus"))}</small></button>`;
+  const s=d.warn||(d.hum!=null?`${fT(d.cur)}° · ${d.hum} %`:d.cur!=null?`${fT(d.cur)}°`:d.batt!=null?`Batterie ${d.batt} %`:d.w!=null?`${d.w} W`:{speaker:"Chromecast",camera:"Kamera",router:"Online",vacuum:"Bereit"}[d.t]||"");
+  return`<div class="tile static${off}"><span class="ti">${ic(d.t)}</span><b>${esc(d.n)}</b><small class="${d.warn?"warnt":""}">${esc(s)}</small></div>`;
+}
+function lightsCard(){
+  const l=S.devices.filter(d=>(d.t==="lamp"||d.t==="socket")&&'on' in d);
+  return`<section class="card span2">${H("lamp","c-amber","Licht & Steckdosen",`${l.filter(d=>d.on).length} an`)}<div class="tiles">${l.map(tile).join("")}</div></section>`;
+}
+function camCard(){const c=S.devices.find(d=>d.t==="camera");if(!c)return"";
+  return`<section class="card">${H("camera","c-violet",esc(c.n),"Google Nest")}<div class="cam"><div><b>Livebild</b>Nest-Kameras zeigen ihr Bild nur in der Google-Home-App.</div></div></section>`}
+
+/* ---------- Ansichten ---------- */
+const V={
+ overview:()=>`<div class="grid">${weatherCard()}${roomsCard()}${mediaCard()}${energyCard()}${scenesCard()}${presenceCard()}${climateCard()}${alertsCard()}${vacuumCard()}${lightsCard()}${camCard()}</div>`,
+ rooms:()=>{const zs=zones();if(!S.room||!zs.includes(S.room))S.room=zs[0];const ds=S.devices.filter(d=>d.z===S.room);
+   return`<div class="rtabs">${zs.map(z=>`<button data-room="${esc(z)}" aria-pressed="${z===S.room}">${esc(z)}</button>`).join("")}</div>
+   <section class="card">${H("home","c-blue",esc(S.room),`${ds.length} Geräte`)}<div class="tiles">${ds.map(tile).join("")}</div></section>`},
+ climate:()=>`<div class="grid">${climateCard(true)}${weatherCard()}</div>`,
+ energy:()=>{const u=S.devices.filter(d=>d.on&&d.w>0&&!d.gen).sort((a,b)=>b.w-a.w);
+   return`<div class="grid">${energyCard(true)}<section class="card">${H("lamp","c-amber","Verbraucher jetzt")}<div class="list">${u.map(d=>`<div class="li"><span class="ico">${ic(d.t,16)}</span><span class="grow">${esc(d.n)}<small>${esc(d.z)}</small></span><span class="val">${d.w} W</span></div>`).join("")||'<div class="ok">Gerade läuft nichts.</div>'}</div></section></div>
+   <p class="note">${S.mode==="live"?"Der Tagesverlauf füllt sich, solange die App geöffnet ist.":"Tagesverlauf ist ein Beispiel."}</p>`}
+};
+const TITLES={overview:"Übersicht",rooms:"Räume",climate:"Klima",energy:"Energie"};
+
+function settingsModal(){
+  return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
+   <h3 id="st">Verbindung & Panel</h3>
+   <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz. Den API-Schlüssel legst du in der Homey Web App unter Einstellungen → API-Schlüssel an.</p>
+   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg okm">Verbunden · ${S.devices.length} Geräte</div>`:""}
+   <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"><small>Steht in der Homey-App unter Einstellungen → Allgemein.</small></div>
+   <div class="fld"><label for="f-key">API-Schlüssel</label><input id="f-key" type="password" autocomplete="off" placeholder="Schlüssel einfügen" value="${esc(cfg.key)}"><small>Wird nur auf diesem Gerät gespeichert.</small></div>
+   <div class="fld"><label for="f-city">Ort fürs Wetter</label><input id="f-city" autocomplete="off" placeholder="z. B. Hamburg" value="${esc(cfg.city)}"></div>
+   <div class="toggle-row"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></div>
+   <div class="toggle-row"><span>Nachts automatisch abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></div>
+   <div class="row"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
+  </div></div>`;
+}
+
+/* ---------- Rendern ---------- */
+function render(){
+  $("#view").innerHTML=V[S.view]();$("#vt").textContent=TITLES[S.view];
+  document.querySelectorAll(".nav[data-view]").forEach(b=>b.dataset.view===S.view?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  const c=$("#conn");c.className="conn"+(S.mode==="live"?" live":S.mode==="error"?" err":"");c.querySelector("span").textContent=S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo";
+  const w=S.weather;$("#wxmini").innerHTML=`<span style="color:var(--amber)">${ic(w?WMO(w.code)[0]:"sun",22)}</span>${w?Math.round(w.t):14} °C`;
+  $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
+}
+function tick(){const n=new Date();$("#time").textContent=n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+  $("#date").textContent=n.toLocaleDateString("de-DE",{weekday:"short",day:"numeric",month:"short"});
+  if(store.get("autonight",true)){const h=n.getHours(),auto=h>=22||h<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
+function setNight(on){S.night=on;document.body.classList.toggle("night",on);$("#nightbtn").setAttribute("aria-pressed",on)}
+
+/* ---------- Aktionen ---------- */
+async function toggle(d){const prev=d.on,pw=d.w;d.on=!d.on;d.w=d.on?(d.base||0):0;render();
+  if(await setCap(d,"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
+async function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
+async function scene(name){
+  if(S.mode==="live"){await triggerFlow(name);return}
+  const set=(n,v)=>{const d=S.devices.find(y=>y.n===n);if(d){d.on=v;d.w=v?d.base:0}};
+  const lamps=v=>S.devices.filter(d=>d.t==="lamp").forEach(d=>{d.on=v;d.w=v?d.base:0});
+  const th=t=>S.devices.filter(d=>d.t==="thermostat").forEach(d=>d.temp=t);
+  if(name==="Guten Morgen"){set("Lampe Büro",true);set("LED Flur",true);th(21)}
+  if(name==="Außer Haus"){lamps(false);["Strom Fernseher","TV Gästezimmer","Steckdose TV"].forEach(x=>set(x,false));th(17)}
+  if(name==="Filmabend"){set("Strom Fernseher",true);set("Lavalampe",true);set("Ikea Lampe",true);set("Vitrine",false)}
+  if(name==="Gute Nacht"){lamps(false);th(17)}
+  toast(`„${name}“ ausgeführt (Demo)`);render();
+}
+async function media(cmd){
+  const s=dev(S.spk);if(!s)return;
+  if(cmd==="play"){const prev=s.playing;s.playing=!s.playing;render();if(S.mode!=="live"||s.caps.speaker_playing)await setCap(s,"speaker_playing",s.playing,()=>{s.playing=prev});else toast("Dieser Lautsprecher kann über Homey nicht starten");return}
+  if(S.mode==="live"&&s.caps[cmd])await setCap(s,cmd,true);toast(cmd==="speaker_next"?"Nächster Titel":"Vorheriger Titel");
+}
+async function vac(state){
+  const v=S.devices.find(d=>d.t==="vacuum");if(!v)return;const prev=v.vstate;v.vstate=state;render();
+  if(S.mode==="live"){if(v.caps.vacuumcleaner_state)await setCap(v,"vacuumcleaner_state",state,()=>{v.vstate=prev});else if(v.caps.onoff)await setCap(v,"onoff",state==="cleaning");else{toast("Der Deebot bietet hier keine Steuerung an");return}}
+  toast({cleaning:"Saugen gestartet",stopped:"Angehalten",docked:"Fährt zur Station"}[state]);
+}
+let wakeLock=null;
+async function applyWake(){try{if(store.get("wake",false)&&"wakeLock" in navigator&&document.visibilityState==="visible"){wakeLock=await navigator.wakeLock.request("screen")}else if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,[data-close]");if(!b)return;
+  if(b.matches(".scrim")&&e.target!==b)return;
+  if(b.dataset.close!==undefined){S.modal=null;render();return}
+  if(b.dataset.open){S.modal=b.dataset.open;render();setTimeout(()=>{const f=$("#f-addr");f&&f.focus()},50);return}
+  if(b.dataset.save!==undefined){cfg={addr:$("#f-addr").value.trim(),key:$("#f-key").value.trim(),city:$("#f-city").value.trim()};store.set("cfg",cfg);
+    store.set("wake",$("#f-wake").checked);store.set("autonight",$("#f-autonight").checked);applyWake();S.modal=null;loadWeather();connect();return}
+  if(b.dataset.demo!==undefined){S.err="";loadDemo();S.modal=null;render();toast("Demo-Daten geladen");return}
+  if(b.id==="nightbtn"){setNight(!S.night);return}
+  if(b.dataset.view){S.view=b.dataset.view;render();scrollTo(0,0);return}
+  if(b.dataset.room){S.room=b.dataset.room;S.view="rooms";render();scrollTo(0,0);return}
+  if(b.dataset.scene)return scene(b.dataset.scene);
+  if(b.dataset.spk){S.spk=b.dataset.spk;render();return}
+  if(b.dataset.media)return media(b.dataset.media);
+  if(b.dataset.vac)return vac(b.dataset.vac);
+  if(b.dataset.temp){const d=dev(b.dataset.temp);if(d)temp(d,+b.dataset.d);return}
+  if(b.dataset.tog){const d=dev(b.dataset.tog);if(d)toggle(d);return}
+});
+document.addEventListener("input",e=>{if(e.target.id==="vol"){S.vol=+e.target.value;$("#volv").textContent=S.vol;const s=dev(S.spk);if(s){s.vol=S.vol;clearTimeout(s._v);s._v=setTimeout(()=>{if(S.mode==="live"&&s.caps.volume_set)setCap(s,"volume_set",S.vol/100)},400)}}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.modal){S.modal=null;render()}});
+/* Wandpanel: nach 3 Minuten ohne Berührung zurück zur Übersicht */
+let idle;const resetIdle=()=>{clearTimeout(idle);idle=setTimeout(()=>{if(S.view!=="overview"&&!S.modal){S.view="overview";render()}},180000)};
+["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true}));resetIdle();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){applyWake();if(S.mode!=="demo")connect(true)}});
+setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible"&&!S.modal)connect(true)},10000);
+setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
+
+tick();setInterval(tick,15000);render();applyWake();
+if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
+</script>
+
+</body>
+</html>

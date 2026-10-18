@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wandpanel">
+<meta name="theme-color" content="#0f1115">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Davids Wandpanel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one-screen landscape wall panel — fixed info rail left (clock, weather, energy today), right a three-way switch (Heizung / Licht / Steckdosen) whose tiles fill the remaining height. Stacks on narrow portrait screens. Dark-only by choice. */
+:root{
+  --bg:#0f1115; --rail:#161920; --tile:#1c2027; --tile-2:#252a33; --line:#2c323c;
+  --fg:#eef1f6; --muted:#8b93a3; --dim:#5b6372;
+  --heat:#ff8a3d; --cool:#5aa9ff; --light:#ffc861; --plug:#2fd3b0; --red:#ff5d64; --green:#7fd34e;
+  --font:"Manrope",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+  --gap:clamp(8px,1.4vh,14px); --r:clamp(14px,2.4vh,22px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--fg);overflow:hidden}
+body{font-family:var(--font);font-size:clamp(15px,2.9vh,21px);line-height:1.3;font-variant-numeric:tabular-nums;transition:filter .6s}
+body.night{filter:brightness(.55) saturate(.8)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.panel{height:100%;display:grid;grid-template-columns:minmax(240px,31%) minmax(0,1fr);gap:var(--gap);padding:var(--gap) max(var(--gap),env(safe-area-inset-right,0px)) var(--gap) max(var(--gap),env(safe-area-inset-left,0px))}
+
+/* rail */
+.rail{background:var(--rail);border-radius:var(--r);padding:clamp(14px,2.6vh,24px);display:flex;flex-direction:column;gap:clamp(8px,1.8vh,18px);min-height:0;overflow-y:auto;scrollbar-width:none}
+@media (max-height:470px) and (min-aspect-ratio:1/1){.rail .blk.wbox{display:none}}
+.time{font-size:clamp(54px,14vh,120px);font-weight:800;letter-spacing:-.04em;line-height:.95}
+.date{color:var(--muted);font-weight:600;margin-top:4px;font-size:1.05em}
+.wx{display:flex;align-items:center;gap:12px}
+.wx b{font-size:clamp(30px,7vh,52px);font-weight:700;letter-spacing:-.03em}
+.wx .sub{color:var(--muted);font-size:.9em;line-height:1.25}
+.blk{border-top:1px solid var(--line);padding-top:clamp(10px,2vh,16px);display:flex;flex-direction:column;gap:8px}
+.lab{font-size:max(11px,.72em);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.erow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.erow b{font-weight:700;white-space:nowrap}
+.ebar{height:6px;border-radius:3px;background:var(--tile-2);overflow:hidden}
+.ebar i{display:block;height:100%;border-radius:3px}
+.inside{display:flex;gap:16px;font-weight:700;font-size:1.25em}
+.inside span{display:inline-flex;align-items:center;gap:6px}
+.inside svg{color:var(--muted)}
+.warns{display:flex;flex-direction:column;gap:4px;font-size:.85em}
+.warns div{display:flex;gap:8px;align-items:center;color:#ffb3b6;min-width:0}
+.warns div span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot{margin-top:auto;display:flex;align-items:center;gap:8px}
+.conn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:999px;border:0;background:var(--tile);color:var(--muted);font-weight:600;font-size:.9em}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.conn.live i{background:var(--green)}.conn.err i{background:var(--red)}
+.rbtn{width:42px;height:42px;border-radius:50%;border:0;background:var(--tile);display:grid;place-items:center;color:var(--fg)}
+.rbtn[aria-pressed="true"]{color:var(--light)}
+.foot .rbtn:first-of-type{margin-left:auto}
+
+/* main */
+.main{display:flex;flex-direction:column;gap:var(--gap);min-width:0;min-height:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--rail);border-radius:999px;padding:6px}
+.seg button{border:0;background:none;border-radius:999px;padding:clamp(8px,1.8vh,14px) 10px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);white-space:nowrap;min-width:0}
+.seg button{font-size:1.05em}
+.seg button small{font-weight:600;font-size:.78em;opacity:.8}
+.seg button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.seg button[aria-selected="true"][data-tab="heat"] svg{color:var(--heat)}
+.seg button[aria-selected="true"][data-tab="light"] svg{color:#d99a00}
+.seg button[aria-selected="true"][data-tab="plug"] svg{color:#12a888}
+.area{flex:1;min-height:0;display:grid;gap:var(--gap);grid-auto-rows:minmax(0,1fr);overflow:auto}
+.area.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.area.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.area.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bar2{display:flex;justify-content:flex-end;gap:8px}
+.pillbtn{border:0;background:var(--rail);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9em;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+
+/* heating tile */
+.heat{position:relative;background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,20px);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr auto;gap:6px 12px;min-height:0;overflow:hidden;isolation:isolate}
+.heat::before{content:"";position:absolute;inset:auto 0 0 0;height:5px;background:var(--cool);z-index:-1}
+.heat.on::before{background:var(--heat)}
+.heat .room{font-weight:700;font-size:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heat .state{justify-self:end;font-size:.82em;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(90,169,255,.14);color:var(--cool);white-space:nowrap}
+.heat.on .state{background:rgba(255,138,61,.16);color:var(--heat)}
+.heat .target{grid-column:1/-1;align-self:center;display:flex;align-items:baseline;gap:10px;min-width:0}
+.heat .target b{font-size:clamp(42px,11vh,96px);font-weight:800;letter-spacing:-.04em;line-height:1}
+.heat .target span{color:var(--muted);font-weight:700;white-space:nowrap;font-size:1.05em}
+.heat .ctl{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.heat .ctl button{border:0;border-radius:clamp(10px,1.8vh,16px);background:var(--tile-2);height:clamp(44px,9vh,72px);font-size:clamp(22px,4vh,32px);font-weight:600;display:grid;place-items:center}
+.heat .ctl button:active{background:#323844}
+.heat .low{color:var(--red);font-size:.8em;font-weight:700}
+
+/* switch tile (light / plug) */
+.sw{position:relative;border:0;background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,20px);display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:0;min-width:0;overflow:hidden;transition:background .25s,color .25s}
+.sw .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sw .ico{width:clamp(36px,7vh,58px);height:clamp(36px,7vh,58px);border-radius:50%;display:grid;place-items:center;background:var(--tile-2);color:var(--muted);transition:all .25s;flex:none}
+.sw .knob{width:44px;height:26px;border-radius:999px;background:var(--tile-2);position:relative;flex:none;transition:background .25s}
+.sw .knob::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#9aa2b1;transition:all .25s}
+.sw b{font-weight:700;font-size:1.08em;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.sw small{display:block;color:var(--muted);font-weight:600;font-size:.85em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw .val{font-weight:800;font-size:1.45em;margin-top:4px;line-height:1.1}
+.sw.light.on{background:linear-gradient(150deg,#ffd885,#ffb84a);color:#2a1c00}
+.sw.light.on .ico{background:rgba(255,255,255,.55);color:#9a5d00}
+.sw.light.on small{color:#6b4a10}
+.sw.plug.on{background:linear-gradient(150deg,#1f3b37,#1c2b2b);box-shadow:inset 0 0 0 2px rgba(47,211,176,.55)}
+.sw.plug.on .ico{background:rgba(47,211,176,.18);color:var(--plug)}
+.sw.on .knob{background:rgba(0,0,0,.25)}
+.sw.plug.on .knob{background:var(--plug)}
+.sw.on .knob::after{left:21px;background:#fff}
+.sw.off-line{opacity:.45}
+.sw .warn{color:var(--red)}
+.sw:active{transform:scale(.98)}
+
+/* dialog */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:grid;place-items:center;padding:16px}
+.dlg{background:var(--rail);border-radius:22px;padding:20px;width:min(560px,100%);max-height:94vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.dlg h3{margin:0;font-size:20px}
+.dlg p{margin:0;color:var(--muted);font-size:14px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:13px;font-weight:700;color:var(--muted)}
+.fld input{background:var(--tile);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;width:100%}
+.fld input:focus{outline:2px solid var(--cool);outline-offset:0}
+.fld small{color:var(--dim);font-size:12px}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--tile);border-radius:12px;padding:11px 12px}
+.trow input{width:22px;height:22px;accent-color:var(--cool)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:0;background:var(--tile-2);border-radius:12px;padding:11px 16px;font-weight:700}
+.btn.primary{background:var(--cool);color:#06121f}
+.msg{font-size:14px;padding:10px 12px;border-radius:12px}
+.msg.err{background:rgba(255,93,100,.14);color:#ffb3b6}
+.msg.ok{background:rgba(127,211,78,.14);color:#c4ec9f}
+.toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+button:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+
+/* narrow / portrait */
+@media (max-width:760px),(max-aspect-ratio:1/1){
+  html,body{overflow:auto}
+  .panel{height:auto;min-height:100%;grid-template-columns:minmax(0,1fr)}
+  .rail{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:16px}
+  .rail .clockbox{grid-row:span 2}
+  .rail .blk,.rail .foot{grid-column:1/-1}
+  .time{font-size:56px}
+  .area{overflow:visible;grid-auto-rows:minmax(150px,auto)}
+  .area.c3,.area.c4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .seg button small{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="panel">
+  <aside class="rail" id="rail"></aside>
+  <section class="main">
+    <div class="seg" role="tablist" aria-label="Bereich" id="seg"></div>
+    <div class="area" id="area"></div>
+  </section>
+</div>
+<div id="modal"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+
+const P={
+lamp:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+socket:'<path d="M8 3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><circle cx="12" cy="12" r="3.5"/><path d="M11 11.2v1.6M13 11.2v1.6"/>',
+speaker:'<rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7.5" r="1"/>',
+radiator:'<path d="M4 6v13M7 6v13M10 6v13M13 6v13M16 6v13M19 6v13M3 6h17M3 19h17M20 8h2"/>',
+thermo:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',
+vacuum:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/>',
+camera:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+sensor:'<rect x="6" y="3" width="12" height="18" rx="3"/><path d="M10 8h4M10 12h4"/>',
+solar:'<path d="M3 20l3-12h12l3 12zM9 8l-1 12M15 8l1 12M4.5 14h15"/>',
+air:'<rect x="5" y="3" width="14" height="18" rx="4"/><path d="M9 8h6M9 11h6M9 14h6"/>',
+button:'<rect x="5" y="5" width="14" height="14" rx="3"/><circle cx="12" cy="12" r="2.5"/>',
+router:'<rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 13l-2-8M17 13l2-8"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z"/>',
+rain:'<path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7zM8 19l-1 2M12 19l-1 2M16 19l-1 2"/>',
+moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+away:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',
+film:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>',
+alert:'<path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+batt:'<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>',
+drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+home:'<path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z" fill="currentColor" stroke="none"/>',
+bed:'<path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 15h18M6 9V6h5v3M13 9V6h5v3M3 18v2M21 18v2"/>',
+bath:'<path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM6 12V5a2 2 0 0 1 4 0M7 19l-1 2M17 19l1 2"/>',
+sofa:'<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2zM5 18v2M19 18v2"/>',
+desk:'<path d="M3 9h18M5 9v11M19 9v11M14 9v6h5M9 5h6v4H9z"/>',
+books:'<path d="M5 4h3v16H5zM10 7h3v13h-3zM15 5l3 .8-3.2 14.4-2.9-.6z"/>',
+door:'<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18M14.5 12h.01"/>',
+pot:'<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 10h20M9 6c0-1 1-1 1-2M14 6c0-1 1-1 1-2"/>',
+play:'<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
+stop:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
+dock:'<path d="M3 11l9-7 9 7M5 10v10h14V10"/>',
+up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',chev:'<path d="M9 6l6 6-6 6"/>',
+arrdown:'<path d="M12 5v14M6 13l6 6 6-6"/>',flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-3 2-4 2-7 1.5 1 2 2 2 3 1-2 1-4 1-6z"/>',
+bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',leaf:'<path d="M5 21c0-9 5-15 15-16-1 10-7 15-15 16zM5 21l7-7"/>'};
+const ic=(t,s=22,w=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[t]||P.sensor}</svg>`;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const roomIcon=z=>{z=z.toLowerCase();return z.includes("schlaf")?"bed":z.includes("bad")?"bath":z.includes("gäste")?"books":z.includes("wohn")?"sofa":z.includes("büro")?"desk":z.includes("flur")?"door":z.includes("küche")?"pot":"home"};
+const devIcon=t=>({lamp:"lamp",socket:"socket",thermostat:"radiator",speaker:"speaker",vacuum:"vacuum",camera:"camera",sensor:"sensor",solar:"solar",air:"air",button:"button",router:"router"}[t]||"sensor");
+const slug=z=>"r-"+z.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,"");
+
+const DEMO=[
+{n:"Lampe Büro",z:"Büro",t:"lamp",on:true,w:0},{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:20,cur:22.5,batt:70},
+{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked"},{n:"TV Gästezimmer",z:"Büro",t:"socket",on:true,w:4},
+{n:"Smart Control Büro",z:"Büro",t:"button",batt:80},
+{n:"Ikea Lampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Lavalampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},
+{n:"Vitrine",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Strom Fernseher",z:"Wohnzimmer",t:"socket",on:true,w:31},
+{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Steckdose Ecovacs",z:"Wohnzimmer",t:"socket",on:true,w:6},
+{n:"Fritzbox",z:"Wohnzimmer",t:"router"},
+{n:"LED Flur",z:"Flur",t:"lamp",on:false,w:0},{n:"Flur",z:"Flur",t:"socket",on:true,w:3},
+{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:3},{n:"Kamera: Flur",z:"Flur",t:"camera"},
+{n:"Küche",z:"Küche",t:"speaker",warn:"Verbindung geschlossen"},
+{n:"Bad",z:"Badezimmer",t:"socket",on:false,w:0},{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:19,cur:22,batt:80},
+{n:"Badezimmer",z:"Badezimmer",t:"speaker"},
+{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:17,cur:21,batt:80},{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:2},
+{n:"Steckdose TV",z:"Gästezimmer",t:"socket",on:true,w:2},{n:"Steckdose Zelt",z:"Gästezimmer",t:"socket",on:true,w:12},
+{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:25.2,hum:58,batt:100},
+{n:"Lampe Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"thermostat",temp:18,cur:24,batt:40},
+{n:"Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"button",batt:100},
+{n:"STREAM Solar System",z:"Heim",t:"solar",w:81,gen:true},{n:"EcoFlow STREAM",z:"Heim",t:"sensor",w:107}];
+const DEMO_USERS=[{name:"David",present:true,asleep:false}];
+const SOLAR_DEMO=[0,0,0,0,0,0,0,0,40,180,420,610,700,560,480,300,120,20,0,0,0,0,0,0];
+
+const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("dz_"+k,JSON.stringify(v))}catch(e){}}};
+let cfg=store.get("cfg",{addr:"",key:"",city:""});
+let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),histLive:false,view:"home",spk:null,vol:35,night:false,modal:null};
+const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
+const DEMO_KWH={"Strom Fernseher":.706,"Steckdose Ecovacs":.437,"Steckdose Zelt":.131,"TV Gästezimmer":.084,"Flur":.061,"Luftentfeuchter":.042,"Steckdose TV":.03,"Lampe Büro":.018,"STREAM Solar System":3.5};
+function loadDemo(){S.devices=DEMO.map((d,i)=>({...d,id:"d"+i,base:d.w||({lamp:6,socket:5,air:8}[d.t]||0),caps:{},kwh:DEMO_KWH[d.n]}));S.users=DEMO_USERS;S.mode="demo";S.solarHist=SOLAR_DEMO.slice();S.daily="demo"}
+loadDemo();
+
+function baseUrl(a){a=(a||"").trim().replace(/\/+$/,"");if(!a)return"";if(/^https?:\/\//.test(a))return a;
+  if(/^\d+\.\d+\.\d+\.\d+$/.test(a))return`https://${a.replace(/\./g,"-")}.homey.homeylocal.com`;return"https://"+a}
+async function api(path,opt={}){
+  const r=await fetch(baseUrl(cfg.addr)+path,{...opt,headers:{"Authorization":"Bearer "+cfg.key,"Content-Type":"application/json"}});
+  if(r.status===401||r.status===403)throw new Error("API-Schlüssel abgelehnt (fehlende Rechte?)");
+  if(!r.ok)throw new Error("Homey antwortet mit Fehler "+r.status);
+  const t=await r.text();return t?JSON.parse(t):null;
+}
+const CLS={light:"lamp",socket:"socket",thermostat:"thermostat",heater:"thermostat",vacuumcleaner:"vacuum",speaker:"speaker",tv:"speaker",camera:"camera",sensor:"sensor",solarpanel:"solar",battery:"solar",airpurifier:"air",airconditioning:"air",fan:"air",dehumidifier:"air",humidifier:"air",button:"button",remote:"button",other:"router"};
+function mapDevice(d,zones){
+  const c=d.capabilitiesObj||{},v=k=>c[k]?c[k].value:undefined;
+  const t=CLS[d.virtualClass||d.class]||"router";
+  const o={id:d.id,n:d.name,z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
+  if(v("onoff")!==undefined)o.on=!!v("onoff");
+  const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
+  if(v("target_temperature")!=null)o.temp=v("target_temperature");
+  if(v("measure_temperature")!=null)o.cur=v("measure_temperature");
+  if(v("measure_humidity")!=null)o.hum=Math.round(v("measure_humidity"));
+  if(v("measure_battery")!=null)o.batt=Math.round(v("measure_battery"));
+  if(v("measure_pm25")!=null)o.pm=Math.round(v("measure_pm25"));
+  if(v("vacuumcleaner_state")!=null)o.vstate=v("vacuumcleaner_state");
+  if(v("speaker_playing")!=null)o.playing=!!v("speaker_playing");
+  if(v("volume_set")!=null)o.vol=Math.round(v("volume_set")*100);
+  if(v("speaker_track")!=null)o.track=v("speaker_track");
+  if(v("speaker_artist")!=null)o.artist=v("speaker_artist");
+  if(t==="solar")o.gen=true;
+  o.meter=Object.keys(c).find(k=>k==="meter_power")||Object.keys(c).find(k=>k.startsWith("meter_power"));o.hasPower=!!c.measure_power;
+  if(d.available===false)o.warn=d.unavailableMessage||"Nicht erreichbar";
+  else if(v("alarm_battery")===true&&o.batt==null)o.warn="Batterie schwach";
+  o.base=o.w||6;return o;
+}
+async function connect(silent){
+  if(!cfg.addr||!cfg.key){loadDemo();render();return}
+  if(sandboxed){S.mode="demo";S.err="In dieser Vorschau sind Verbindungen gesperrt. Öffne die App über GitHub im Heimnetz.";render();return}
+  try{
+    const [devs,zones]=await Promise.all([api("/api/manager/devices/device/"),api("/api/manager/zones/zone/")]);
+    S.devices=Object.values(devs).map(d=>mapDevice(d,zones));
+    S.mode="live";S.err="";
+    api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
+    Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
+      .then(([a,b])=>{S.flows=[...Object.values(a).map(f=>({id:f.id,name:f.name,adv:false})),...Object.values(b).map(f=>({id:f.id,name:f.name,adv:true}))]});
+    if(!S.dailyAt||Date.now()-S.dailyAt>300000||S.daily!=="ok")loadDaily();else applyDaily();
+    if(!silent)toast("Mit Homey verbunden");
+  }catch(e){
+    S.err=e.name==="TypeError"?"Homey nicht erreichbar. Bist du im Heimnetz und stimmt die Adresse?":e.message;
+    if(!S.devices.length||!S.devices[0].live)loadDemo();S.mode="error";
+  }
+  render();
+}
+async function setCap(d,cap,value,revert){
+  if(S.mode!=="live")return true;
+  try{await api(`/api/manager/devices/device/${d.id}/capability/${cap}`,{method:"PUT",body:JSON.stringify({value})});return true}
+  catch(e){revert&&revert();toast("Fehler: "+e.message);render();return false}
+}
+async function triggerFlow(name){
+  const f=S.flows.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+  if(!f){toast(`Lege in Homey einen Flow „${name}“ an`);return false}
+  try{await api(`/api/manager/flow/${f.adv?"advancedflow":"flow"}/${f.id}/trigger`,{method:"POST",body:"{}"});toast(`„${name}“ gestartet`);setTimeout(()=>connect(true),1500);return true}
+  catch(e){toast("Fehler: "+e.message);return false}
+}
+
+/* Tageswerte aus dem Homey-Verlauf (Insights) */
+let DAILY={};
+async function insightsToday(id,cap){const r=await api(`/api/manager/insights/log/${encodeURIComponent("homey:device:"+id)}/${encodeURIComponent(cap)}/entry?resolution=today`);return((r&&r.values)||[]).filter(x=>x&&x.v!=null)}
+function applyDaily(){S.devices.forEach(d=>{const x=DAILY[d.id];if(x&&x.first!=null){const cur=d.caps&&d.caps[d.meter]&&d.caps[d.meter].value;d.kwh=Math.max(0,(cur!=null?cur:x.last)-x.first)}})}
+async function loadDaily(){
+  if(S.mode!=="live")return;S.dailyAt=Date.now();
+  const meters=S.devices.filter(d=>d.meter),gens=S.devices.filter(d=>d.gen&&d.hasPower);
+  let ok=0,err="";
+  await Promise.all(meters.map(async d=>{try{const v=await insightsToday(d.id,d.meter);if(v.length){DAILY[d.id]={first:v[0].v,last:v[v.length-1].v};ok++}}catch(e){err=e.message}}));
+  const hist=Array(24).fill(0);
+  await Promise.all(gens.map(async d=>{try{const v=await insightsToday(d.id,"measure_power");const h=Array(24).fill(0),c=Array(24).fill(0);v.forEach(x=>{const k=new Date(x.t).getHours();h[k]+=x.v;c[k]++});h.forEach((sum,k)=>{if(c[k])hist[k]+=sum/c[k]});ok++}catch(e){err=e.message}}));
+  S.solarHist=hist.map(v=>Math.round(v));
+  S.daily=ok?"ok":"fail";S.dailyErr=err;applyDaily();render();
+}
+const fE=k=>k==null?"–":k<1?`${Math.round(k*1000)} Wh`:`${k.toFixed(2).replace(".",",")} kWh`;
+const eParts=k=>k==null?["–",""]:k<1?[String(Math.round(k*1000)),"Wh"]:[k.toFixed(2).replace(".",","),"kWh"];
+function dayTotals(){
+  const gens=S.devices.filter(d=>d.gen);
+  const sol=gens.some(d=>d.kwh!=null)?gens.reduce((a,d)=>a+(d.kwh||0),0):S.solarHist.reduce((a,b)=>a+b,0)/1000;
+  const cons=S.devices.filter(d=>!d.gen&&d.z!=="Heim"&&d.kwh!=null);
+  return{sol,use:cons.reduce((a,d)=>a+d.kwh,0),cons:cons.sort((a,b)=>b.kwh-a.kwh),ready:S.daily==="ok"||S.daily==="demo"};
+}
+const kpi=(k,color,label)=>{const [v,u]=eParts(k);return`<div class="kpi"><b style="color:${color}">${v}<small>${u}</small></b><span>${label}</span></div>`};
+const WMO=c=>c===0?["sun","Sonnig"]:c<=2?["sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
+async function loadWeather(){
+  if(!cfg.city||sandboxed){S.weather=null;return}
+  try{
+    const g=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=${encodeURIComponent(cfg.city)}`)).json();
+    const p=g.results&&g.results[0];if(!p)throw 0;
+    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
+    S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,
+      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]}))};
+  }catch(e){S.weather=null}
+  render();
+}
+
+const $=s=>document.querySelector(s);
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)};
+const fT=v=>v==null?"–":(+v).toFixed(1).replace(".",",");
+const dev=id=>S.devices.find(d=>d.id===id);
+const solarNow=()=>S.devices.filter(d=>d.gen).reduce((m,d)=>Math.max(m,d.w||0),0);
+const useNow=()=>S.devices.filter(d=>d.on&&!d.gen).reduce((s,d)=>s+(d.w||0),0);
+const zones=()=>{const c={};S.devices.forEach(d=>c[d.z]=(c[d.z]||0)+1);return Object.keys(c).filter(z=>z!=="Heim"&&z!=="Ohne Raum").sort((a,b)=>c[b]-c[a])};
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const tempOf=ds=>avg(ds.filter(d=>d.cur!=null&&d.t!=="thermostat").map(d=>d.cur))??avg(ds.filter(d=>d.cur!=null).map(d=>d.cur));
+const humOf=ds=>avg(ds.filter(d=>d.hum!=null).map(d=>d.hum));
+const alerts=()=>S.devices.filter(d=>d.warn).map(d=>({d,kind:"r",txt:d.warn}))
+  .concat(S.devices.filter(d=>!d.warn&&d.batt!=null&&d.batt<=40&&d.t!=="vacuum").map(d=>({d,kind:"y",txt:`Batterie ${d.batt} %`})));
+function settingsModal(){
+  return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
+   <h3 id="st">Verbindung & Panel</h3>
+   <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz.</p>
+   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg ok">Verbunden · ${S.devices.length} Geräte</div>`:""}
+   <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"></div>
+   <div class="fld"><label for="f-key">API-Schlüssel</label><input id="f-key" type="password" autocomplete="off" placeholder="Schlüssel einfügen" value="${esc(cfg.key)}"><small>Wird nur auf diesem Gerät gespeichert.</small></div>
+   <div class="fld"><label for="f-city">Ort fürs Wetter</label><input id="f-city" autocomplete="off" placeholder="z. B. Stockach" value="${esc(cfg.city)}"></div>
+   <label class="trow" for="f-wake"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></label>
+   <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
+   <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
+  </div></div>`;
+}
+async function toggle(d,val){const prev=d.on,pw=d.w;d.on=val==null?!d.on:val;d.w=d.on?(d.base||0):0;render();
+  if(await setCap(d,"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
+function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
+let wakeLock=null;
+async function applyWake(){try{if(store.get("wake",false)&&"wakeLock" in navigator&&document.visibilityState==="visible"){wakeLock=await navigator.wakeLock.request("screen")}else if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
+
+/* ---------- Wandpanel-Oberfläche ---------- */
+P.plus='<path d="M12 5v14M5 12h14"/>';P.minus='<path d="M5 12h14"/>';P.power='<path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/>';
+const lamps=()=>S.devices.filter(d=>d.t==="lamp"&&'on' in d);
+const plugs=()=>S.devices.filter(d=>d.t==="socket"&&'on' in d&&d.z!=="Heim");
+const heaters=()=>S.devices.filter(d=>d.t==="thermostat");
+const shortZone=z=>z.replace(/ \(.*\)/,"");
+let TAB=store.get("tab","heat");
+const cols=n=>n<=4?"c2":n<=6?"c3":"c4";
+
+function railHTML(){
+  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
+  const t=tempOf(S.devices),h=humOf(S.devices),al=alerts();
+  return`<div class="clockbox"><div class="time" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="date" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div></div>
+   <div class="wx"><span style="color:${wi==="sun"?"var(--light)":"var(--muted)"}">${ic(wi,44,1.7)}</span><div><b>${w?Math.round(w.t):14}°</b><div class="sub">${esc(w?w.place:"Beispiel")} · ${wt}</div></div></div>
+   <div class="blk"><span class="lab">Innen</span><div class="inside">${t!=null?`<span>${ic("thermo",20)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",20)}${Math.round(h)} %</span>`:""}</div></div>
+   <div class="blk"><span class="lab">Energie heute</span>
+    <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):"…"}</b></div>
+    <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):"…"}</b></div></div>
+   ${al.length?`<div class="blk wbox"><span class="lab">Hinweise</span><div class="warns">${al.slice(0,2).map(a=>`<div>${ic(a.kind==="r"?"alert":"batt",15)}<span>${esc(a.d.n)}: ${esc(a.txt)}</span></div>`).join("")}${al.length>2?`<div><span>+ ${al.length-2} weitere</span></div>`:""}</div></div>`:""}
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"}</button>
+    <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
+    <button class="rbtn" data-open="settings" aria-label="Einstellungen"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;
+}
+function segHTML(){
+  const L=lamps(),Pl=plugs(),H=heaters(),heating=H.filter(d=>d.temp>d.cur).length;
+  const b=(k,icon,label,info)=>`<button role="tab" data-tab="${k}" aria-selected="${TAB===k}">${ic(icon,20)}${label}<small>${info}</small></button>`;
+  return b("heat","thermo","Heizung",heating?`${heating} heizt`:`${H.length}`)+b("light","lamp","Licht",`${L.filter(d=>d.on).length}/${L.length}`)+b("plug","socket","Steckdosen",`${Pl.filter(d=>d.on).length}/${Pl.length}`);
+}
+function heatTile(d){
+  const on=d.temp!=null&&d.cur!=null&&d.temp>d.cur;
+  return`<div class="heat${on?" on":""}"><span class="room">${esc(shortZone(d.z))}</span><span class="state">${on?"heizt":"hält"}</span>
+   <div class="target"><b>${fT(d.temp)}°</b><span>Ist ${fT(d.cur)}°</span>${d.batt!=null&&d.batt<=40?`<span class="low">Batterie ${d.batt} %</span>`:""}</div>
+   <div class="ctl"><button data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.n)} kälter">${ic("minus",26,2.4)}</button><button data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.n)} wärmer">${ic("plus",26,2.4)}</button></div></div>`;
+}
+function swTile(d,kind){
+  const off=d.warn?" off-line":"";
+  const val=kind==="plug"?`<div class="val">${d.on&&d.w?`${d.w} W`:d.on?"An":"Aus"}</div><small>heute ${fE(d.kwh)}</small>`:`<div class="val">${d.on?"An":"Aus"}</div>`;
+  return`<button class="sw ${kind}${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}"><span class="top"><span class="ico">${ic(kind==="plug"?"socket":"lamp",24,1.8)}</span><span class="knob"></span></span>
+   <span><b>${esc(d.n)}</b><small class="${d.warn?"warn":""}">${esc(d.warn||shortZone(d.z))}</small>${val}</span></button>`;
+}
+function areaHTML(){
+  const a=$("#area");
+  if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||'<div class="sub">Keine Heizungen gefunden.</div>'}
+  const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
+  return list.map(d=>swTile(d,TAB)).join("")||'<div class="sub">Keine Geräte gefunden.</div>';
+}
+function render(){
+  $("#rail").innerHTML=railHTML();$("#seg").innerHTML=segHTML();$("#area").innerHTML=areaHTML();
+  $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
+}
+function tick(){const n=new Date(),t=$("#time"),d=$("#date");if(t)t.textContent=n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});if(d)d.textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+  if(store.get("autonight",true)){const hr=n.getHours(),auto=hr>=22||hr<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
+function setNight(on){S.night=on;document.body.classList.toggle("night",on);const b=$("#nightbtn");if(b)b.setAttribute("aria-pressed",on)}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,[data-close]");if(!b)return;
+  if(b.matches(".scrim")&&e.target!==b)return;
+  if(b.dataset.close!==undefined){S.modal=null;render();return}
+  if(b.dataset.open){S.modal=b.dataset.open;render();return}
+  if(b.dataset.save!==undefined){cfg={addr:$("#f-addr").value.trim(),key:$("#f-key").value.trim(),city:$("#f-city").value.trim()};store.set("cfg",cfg);
+    store.set("wake",$("#f-wake").checked);store.set("autonight",$("#f-autonight").checked);applyWake();S.modal=null;loadWeather();connect();return}
+  if(b.dataset.demo!==undefined){S.err="";loadDemo();S.modal=null;render();toast("Demo-Daten geladen");return}
+  if(b.id==="nightbtn"){setNight(!S.night);return}
+  if(b.dataset.tab){TAB=b.dataset.tab;store.set("tab",TAB);render();return}
+  if(b.dataset.temp){const d=dev(b.dataset.temp);if(d)temp(d,+b.dataset.d);return}
+  if(b.dataset.tog){const d=dev(b.dataset.tog);if(d)toggle(d);return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.modal){S.modal=null;render()}});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){applyWake();if(S.mode!=="demo")connect(true)}});
+setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible"&&!S.modal)connect(true)},10000);
+setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
+setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible")loadDaily()},300000);
+render();tick();setInterval(tick,15000);applyWake();
+if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
+
+</script>
+</body>
+</html>

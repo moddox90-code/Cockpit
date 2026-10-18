@@ -23,10 +23,12 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--fg)}
+html,body{overflow-x:hidden;max-width:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
 body{font-family:var(--font);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums;transition:filter .6s}
 body.night{filter:brightness(.6) saturate(.8)}
 button,input{font:inherit;color:inherit}
-.shell{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100%}
+.shell{overflow-x:clip;display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100%}
 aside{background:var(--panel);border-right:1px solid var(--edge);padding:18px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;height:100dvh}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:15px}
 .brand i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;color:#fff;flex:none}
@@ -133,6 +135,7 @@ input[type=range]{flex:1;accent-color:var(--blue);min-width:0}
 .vbtns button{border:1px solid var(--edge);background:var(--card-hi);border-radius:10px;padding:10px 6px;cursor:pointer;font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
 .vbtns button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 /* alerts */
+.ico.c-red{background:rgba(255,99,112,.15);color:var(--red)}.ico.c-amber{background:rgba(255,191,60,.15);color:var(--amber)}
 .al .tag{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
 .ok{display:flex;align-items:center;gap:10px;color:var(--muted);padding:6px}
 /* tiles */
@@ -194,7 +197,9 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   aside{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;justify-content:space-around;gap:0;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--edge);z-index:10}
   .brand,.nav.mob-hide{display:none}
   .nav.first-bottom{margin-top:0}
-  .nav{flex-direction:column;gap:3px;font-size:11px;padding:7px 4px;justify-content:center;align-items:center;text-align:center}
+  .nav{flex:1 1 0;width:auto;min-width:0;flex-direction:column;gap:3px;font-size:11px;padding:7px 2px;justify-content:center;align-items:center;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav .lg{display:none}
+  .card{max-width:100%}
   main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   .bar{grid-template-columns:1fr auto;top:env(safe-area-inset-top,0px)}
   .bar h1,.clock{display:none}
@@ -213,7 +218,7 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
     <button class="nav" data-view="rooms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>Räume</button>
     <button class="nav" data-view="climate"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
     <button class="nav" data-view="energy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Energie</button>
-    <button class="nav first-bottom" data-open="settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellungen</button>
+    <button class="nav first-bottom" data-open="settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellung<span class="lg">en</span></button>
   </aside>
   <main>
     <div class="bar">

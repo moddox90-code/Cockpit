@@ -235,7 +235,8 @@ let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,sola
 const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
 const DEMO_KWH={"Strom Fernseher":.706,"FB Steckdose Ecovacs":.437,"FB Steckdose":.131,"Repeater":.088,"EF Luftentfeuchter":.081,"EF Flur":.064,"Luftentfeuchter":.041,"EF Spülmaschine":.021,"EF Waschmaschine":.019,"STREAM Solar System":3.5};
 function loadDemo(){S.devices=DEMO.map((d,i)=>({...d,id:"d"+i,base:d.w||({lamp:6,socket:5,air:8}[d.t]||0),caps:{},kwh:DEMO_KWH[d.n]}));S.users=DEMO_USERS;S.mode="demo";S.solarHist=SOLAR_DEMO.slice();S.daily="demo"}
-loadDemo();
+/* Mit gespeicherter Homey-Verbindung keine Demo-Geräte vorab zeigen (sonst blitzen sie beim Laden kurz auf) */
+if(cfg.addr&&cfg.key&&!sandboxed){S.mode="connecting";S.daily="pending"}else loadDemo();
 
 function baseUrl(a){a=(a||"").trim().replace(/\/+$/,"");if(!a)return"";if(/^https?:\/\//.test(a))return a;
   if(/^\d+\.\d+\.\d+\.\d+$/.test(a))return`https://${a.replace(/\./g,"-")}.homey.homeylocal.com`;return"https://"+a}
@@ -254,6 +255,9 @@ function mapDevice(d,zones){
   const info=[d.name,d.driverId,d.driverUri,d.ownerUri,d.class].join(" ");
   let t=CLS[d.virtualClass||d.class]||"router";
   if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
+  /* Ecoflow-Smart-Plugs u. ä. melden oft keine Klasse "socket": schaltbar + Leistungsmessung = Steckdose */
+  else if((t==="router"||t==="sensor")&&c.onoff&&c.measure_power)t="socket";
+  else if(/^EF[\s-]/.test(d.name)&&c.onoff)t="socket";
   const o={id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
   if(v("onoff")!==undefined)o.on=!!v("onoff");
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
@@ -390,7 +394,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):"…"}</b></div></div>
    ${al.length?`<div class="blk wbox"><span class="lab">Hinweise</span><div class="warns">${al.slice(0,2).map(a=>`<div>${ic(a.kind==="r"?"alert":"batt",15)}<span>${esc(a.d.n)}: ${esc(a.txt)}</span></div>`).join("")}${al.length>2?`<div><span>+ ${al.length-2} weitere</span></div>`:""}</div></div>`:""}
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"}</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":S.mode==="connecting"?"Verbinde …":"Demo"}</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Einstellungen"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;
 }
@@ -416,9 +420,9 @@ function swTile(d,kind){
 const fmtW=w=>w==null?"–":(Math.round(w*10)/10).toString().replace(".",",");
 function areaHTML(){
   const a=$("#area");
-  if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||'<div class="sub">Keine Heizungen gefunden.</div>'}
+  if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||`<div class="sub">${S.mode==="connecting"?"Verbinde mit Homey …":"Keine Heizungen gefunden."}</div>`}
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
-  return list.map(d=>swTile(d,TAB)).join("")||'<div class="sub">Keine Geräte gefunden.</div>';
+  return list.map(d=>swTile(d,TAB)).join("")||`<div class="sub">${S.mode==="connecting"?"Verbinde mit Homey …":"Keine Geräte gefunden."}</div>`;
 }
 function render(){
   $("#rail").innerHTML=railHTML();$("#seg").innerHTML=segHTML();$("#area").innerHTML=areaHTML();

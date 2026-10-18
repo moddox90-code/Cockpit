@@ -12,7 +12,7 @@
 <title>Davids Zuhause</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: phone-first dark home app — centered page header, room sections with icon tiles + stat pills, bottom tab bar; wide screens put sections into columns. Dark-only by choice. */
+/* Layout: cockpit — sidebar + top bar with clock on tablet/desktop, 3-col card grid; phone gets curved header + bottom tab bar. Homey-style anthracite surfaces, light 'on' tiles, Ist→Soll thermostat rows. Dark-only by choice. */
 :root{
   --bg:#141518; --bar:#1e1f24; --card:#24252b; --card-2:#2d2e35; --line:#34353d;
   --fg:#f5f5f7; --muted:#8d8e96; --dim:#5f6068;
@@ -30,8 +30,68 @@ button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 .app{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(100px + env(safe-area-inset-bottom,0px))}
 
+/* shell + sidebar */
+.shell{min-height:100%}
+aside.side{display:none}
+@media (min-width:900px){
+  .shell{display:grid;grid-template-columns:220px minmax(0,1fr)}
+  aside.side{display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;height:100dvh;background:var(--bar);padding:18px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));border-right:1px solid #2a2b31}
+  nav.tabs{display:none}
+  .app{max-width:none;padding-bottom:28px}
+  .toast{bottom:24px}
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:16px}
+.brand i{width:32px;height:32px;border-radius:10px;background:var(--card-2);display:grid;place-items:center;color:var(--fg);flex:none}
+.snav{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:0;background:none;color:#a3a4ab;text-align:left;font-weight:500;width:100%}
+.snav:hover{background:var(--card)}
+.snav[aria-current="page"]{background:var(--card-2);color:var(--fg)}
+.snav[aria-current="page"] svg{color:var(--blue)}
+.snav.bottom{margin-top:auto}
+
+/* cockpit cards */
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;margin-top:18px}
+@media (min-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.span2{grid-column:1/-1}
+@media (min-width:1180px){.span2{grid-column:span 2}}
+.cc{background:var(--card);border-radius:20px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.ch{display:flex;align-items:center;gap:10px;min-width:0;border:0;background:none;padding:0;text-align:left;width:100%;color:var(--fg)}
+.ch .hi{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ch h3{margin:0;font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ch small{margin-left:auto;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.rl{display:flex;align-items:center;gap:12px;padding:8px 0;border:0;background:none;width:100%;text-align:left;min-width:0}
+.rl+.rl{border-top:1px solid var(--line)}
+.rl .si{width:36px;height:36px;border-radius:10px;background:var(--card-2);display:grid;place-items:center;flex:none}
+.rl .pill{background:var(--card-2);font-size:14px;padding:5px 10px}
+.thermo.sm{min-height:76px;background:var(--card-2);border-radius:14px}
+.thermo.sm .main{padding:10px 12px;gap:12px}
+.thermo.sm .temps{font-size:22px}
+.thermo.sm .name{font-size:15px}
+.thermo.sm .ctl{border-left-color:#3d3e46}
+.thermo.sm .ctl button+button{border-top-color:#3d3e46}
+.thermo.sm .dev-ic .badge{border-color:var(--card-2)}
+.stack{display:flex;flex-direction:column;gap:8px}
+.cam{aspect-ratio:16/9;max-width:100%;border-radius:14px;background:repeating-linear-gradient(135deg,#2a2b31 0 10px,#26272d 10px 20px);display:grid;place-items:center;color:var(--muted);font-size:14px;text-align:center;padding:12px}
+.cam b{display:block;color:var(--fg);margin-bottom:4px}
+.scenes.grid2{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+.scenes.grid2 .scene{background:var(--card-2);flex-direction:column;align-items:flex-start;min-height:86px;justify-content:space-between}
+
 /* top header */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));background:var(--bar);border-radius:0 0 50% 50% / 0 0 26px 26px;padding:12px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));background:var(--bar);border-radius:0 0 50% 50% / 0 0 26px 26px;padding:12px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.top .tl{display:flex;align-items:center;gap:10px;min-width:0}
+.top .tr{justify-self:end;display:flex;align-items:center;gap:10px}
+.clock{display:none;align-items:baseline;gap:10px}
+.clock b{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.clock span{color:var(--muted);font-size:14px}
+.wxmini{display:none;align-items:center;gap:6px;font-size:17px;font-weight:600}
+@media (max-width:899px){.top{grid-template-columns:1fr auto}.top h1{position:absolute;left:0;right:0;top:12px;height:40px;pointer-events:none}.top .tl,.top .tr{position:relative;z-index:1}}
+@media (min-width:900px){
+  .top{margin:0 calc(-1 * max(16px,env(safe-area-inset-right,0px))) 0 -16px;border-radius:0;padding:14px max(20px,env(safe-area-inset-right,0px)) 14px 20px;background:linear-gradient(var(--bg) 80%,transparent)}
+  .top{grid-template-columns:auto auto 1fr auto}
+  .top h1{justify-content:flex-start;font-size:22px;order:-1}
+  .clock{justify-self:center}
+  .clock,.wxmini{display:flex}
+}
 .top h1{margin:0;text-align:center;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
 .top h1 svg{color:var(--accent,var(--blue))}
 .round{width:40px;height:40px;border-radius:50%;border:0;background:var(--card-2);display:grid;place-items:center;color:var(--fg)}
@@ -186,21 +246,33 @@ nav.tabs button[aria-current="page"]{color:var(--blue)}
 .toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(86px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (min-width:900px){.hero{margin-top:4px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 </head>
 <body>
-<div class="app">
-  <header class="top">
-    <button class="conn" id="conn" data-open="settings"><i></i><span>Demo</span></button>
-    <h1 id="vt"></h1>
-    <button class="round" id="nightbtn" aria-pressed="false" aria-label="Nachtmodus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
-  </header>
-  <main id="view"></main>
+<div class="shell">
+  <aside class="side" aria-label="Navigation">
+    <div class="brand"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"/></svg></i>Davids Zuhause</div>
+    <button class="snav" data-view="home" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="10" rx="2.2"/><rect x="13" y="3" width="8" height="6" rx="2.2"/><rect x="3" y="15" width="8" height="6" rx="2.2"/><rect x="13" y="11" width="8" height="10" rx="2.2"/></svg>Übersicht</button>
+    <button class="snav" data-view="rooms"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>Räume</button>
+    <button class="snav" data-view="climate"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
+    <button class="snav" data-view="energy"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5C11 3.5 4.5 8 4.5 15.5c0 1.3.2 2.5.6 3.6L3 21.2l1.4 1.4 2.1-2.1c1.1.4 2.3.6 3.6.6C17 21.1 20.5 14 20.5 3.5zM8 18.5c2-4 5-7 9-9-3 3-5.5 6-7.5 9.6z"/></svg>Energie</button>
+    <button class="snav bottom" data-open="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>Einstellungen</button>
+  </aside>
+  <div class="app">
+    <header class="top">
+      <div class="tl"><button class="conn" id="conn" data-open="settings"><i></i><span>Demo</span></button></div>
+      <h1 id="vt"></h1>
+      <div class="clock"><b id="time">--:--</b><span id="date"></span></div>
+      <div class="tr"><span class="wxmini" id="wxmini"></span><button class="round" id="nightbtn" aria-pressed="false" aria-label="Nachtmodus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button></div>
+    </header>
+    <main id="view"></main>
+  </div>
 </div>
 <nav class="tabs" aria-label="Bereiche"><div>
-  <button data-view="home" aria-current="page"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>Startseite</button>
+  <button data-view="home" aria-current="page"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>Übersicht</button>
   <button data-view="rooms"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>Räume</button>
   <button data-view="climate"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
   <button data-view="energy"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5C11 3.5 4.5 8 4.5 15.5c0 1.3.2 2.5.6 3.6L3 21.2l1.4 1.4 2.1-2.1c1.1.4 2.3.6 3.6.6C17 21.1 20.5 14 20.5 3.5zM8 18.5c2-4 5-7 9-9-3 3-5.5 6-7.5 9.6z"/></svg>Energie</button>
@@ -447,8 +519,35 @@ function areaChart(){
    <circle cx="${x(now)}" cy="${y(S.solarHist[now])}" r="4" fill="#ff9f0a" stroke="#24252b" stroke-width="2"/>${xl}</svg>`;
 }
 
+function cHead(icon,rgb,title,small,attr=""){return`<${attr?"button":"div"} class="ch" ${attr}><span class="hi" style="background:rgba(${rgb},.16);color:rgb(${rgb})">${ic(icon,17)}</span><h3>${title}</h3>${small?`<small>${small}</small>`:""}</${attr?"button":"div"}>`}
+const C={
+ weather:()=>{const w=S.weather||{place:"Beispiel",t:14,feel:12,hum:64,wind:3,code:1,hours:[["Jetzt",1,14],["13 Uhr",1,15],["14 Uhr",3,15],["15 Uhr",3,14],["16 Uhr",61,13],["17 Uhr",1,12]].map(x=>({h:x[0],code:x[1],t:x[2]}))};const [i,txt]=WMO(w.code);
+   return`<section class="cc">${cHead("sun","255,197,61","Wetter",esc(S.weather?w.place:"Beispiel"))}
+   <div class="wx"><span style="color:${i==="sun"?"var(--yellow)":"var(--muted)"}">${ic(i,54,1.6)}</span><div><b>${Math.round(w.t)}°</b><div class="sub">${txt}</div></div></div>
+   <div class="kv" style="display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;color:var(--muted);font-size:14px;align-items:center"><span>${ic("thermo",16)}</span><span>Gefühlt</span><span style="color:var(--fg)">${Math.round(w.feel)} °C</span><span>${ic("drop",16)}</span><span>Luftfeuchte</span><span style="color:var(--fg)">${Math.round(w.hum)} %</span><span>${ic("cloud",16)}</span><span>Wind</span><span style="color:var(--fg)">${Math.round(w.wind)} m/s</span></div>
+   <div class="wxrow" style="margin-top:0;border-top:1px solid var(--line);padding-top:12px">${w.hours.slice(0,6).map(h=>{const [hi]=WMO(h.code);return`<div>${h.h}<div style="color:${hi==="sun"?"var(--yellow)":"var(--muted)"};margin:6px 0">${ic(hi,20)}</div><b>${Math.round(h.t)}°</b></div>`}).join("")}</div></section>`},
+ rooms:()=>`<section class="cc">${cHead("home","61,139,255","Räume","Ist-Temperatur")}<div>${zones().map(z=>{const ds=S.devices.filter(d=>d.z===z),lit=ds.filter(d=>d.t==="lamp"&&d.on).length;
+   return`<button class="rl" data-room="${esc(z)}"><span class="si">${ic(roomIcon(z),20)}</span><span class="grow"><span class="name" style="font-size:16px">${esc(z.replace(/ \(.*\)/,""))}</span><br><span class="sub">${lit?`<span style="color:var(--yellow)">${lit} Licht an</span> · `:""}${ds.length} Geräte</span></span>${statPill(tempOf(ds),humOf(ds))}</button>`}).join("")}</div></section>`,
+ media:()=>{const m=mediaCard();return m?m.replace('<section class="sec"><div class="title">Musik</div><div class="card">','<section class="cc">'+cHead("music","165,139,255","Musik","Chromecast")+'<div>').replace(/<\/div><\/section>$/,'</div></section>'):""},
+ energy:()=>{const sol=solarNow(),u=useNow(),kwh=(S.solarHist.reduce((a,b)=>a+b,0)/1000).toFixed(1).replace(".",",");
+   return`<section class="cc">${cHead("leaf","124,207,58","Energie",S.mode==="live"?"Heute":"Beispiel",'data-view="energy"')}
+   <div class="kpis"><div class="kpi"><b style="color:var(--orange)">${kwh}<small>kWh</small></b><span>Solar heute</span></div><span class="vsep"></span><div class="kpi"><b style="color:var(--blue)">${u}<small>W</small></b><span>Verbrauch</span></div><span class="vsep"></span><div class="kpi"><b style="color:${sol>=u?"var(--green)":"var(--red)"}">${Math.abs(sol-u)}<small>W</small></b><span>${sol>=u?"Überschuss":"Netzbezug"}</span></div></div>
+   ${areaChart()}</section>`},
+ scenes:()=>`<section class="cc">${cHead("leaf","56,209,192","Szenen",S.mode==="live"?"Homey-Flows":"")}<div class="scenes grid2">${SCENES.map(s=>`<button class="scene" data-scene="${s[0]}"><span class="sc" style="background:rgba(${s[2]},.18);color:rgb(${s[2]})">${ic(s[1],18)}</span>${s[0]}</button>`).join("")}</div></section>`,
+ presence:()=>{const st=u=>u.asleep?["Schläft","var(--teal)"]:u.present?["Zuhause","var(--green)"]:["Unterwegs","var(--muted)"];
+   return`<section class="cc">${cHead("home","124,207,58","Anwesenheit")}<div>${S.users.map(u=>{const [t,c]=st(u);return`<div class="rl"><span class="si" style="border-radius:50%;font-weight:700">${esc((u.name||"?")[0])}</span><span class="grow name" style="font-size:16px">${esc(u.name)}</span><span style="color:${c};font-weight:600">${t}</span></div>`}).join("")}</div></section>`},
+ climate:()=>{const th=S.devices.filter(d=>d.t==="thermostat");
+   return`<section class="cc">${cHead("thermo","255,159,10","Klima","Ist → Soll",'data-view="climate"')}<div class="stack">${th.map(d=>thermoRow(d).replace('class="thermo"','class="thermo sm"')).join("")}</div></section>`},
+ alerts:()=>{const a=alerts();
+   return`<section class="cc">${cHead("alert","255,90,95","Hinweise",a.length?`${a.length} offen`:"")}<div>${a.length?a.map(x=>`<button class="rl" data-room="${esc(x.d.z)}"><span class="ai ${x.kind}" style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none">${ic(x.kind==="r"?"alert":"batt",18)}</span><span class="grow"><span class="name" style="font-size:16px">${esc(x.d.n)}</span><br><span class="sub">${esc(x.txt)}</span></span></button>`).join(""):`<div class="rl sub">${ic("check",18)} Alles in Ordnung</div>`}</div></section>`},
+ vacuum:()=>{const v=vacuumCard();return v?v.replace('<section class="sec"><div class="title">Saugroboter</div><div class="card">','<section class="cc">'+cHead("vacuum","61,139,255","Saugroboter",esc((S.devices.find(d=>d.t==="vacuum")||{}).z||""))+'<div>'):""},
+ lights:()=>{const l=S.devices.filter(d=>(d.t==="lamp"||d.t==="socket")&&'on' in d);
+   return`<section class="cc span2">${cHead("lamp","255,197,61","Licht & Steckdosen",`${l.filter(d=>d.on).length} an`)}<div class="tiles">${l.map(tile).join("")}</div></section>`},
+ camera:()=>{const c=S.devices.find(d=>d.t==="camera");if(!c)return"";return`<section class="cc">${cHead("camera","165,139,255",esc(c.n),"Google Nest")}<div class="cam"><div><b>Livebild</b>Nest-Kameras zeigen ihr Bild nur in der Google-Home-App.</div></div></section>`}
+};
 const V={
- home:()=>{
+ home:()=>`<div class="grid">${C.weather()}${C.rooms()}${C.media()}${C.energy()}${C.scenes()}${C.presence()}${C.climate()}${C.alerts()}${C.vacuum()}${C.lights()}${C.camera()}</div>`,
+ oldhome:()=>{
    let favs=["Strom Fernseher","Ikea Lampe","LED Flur","Lampe Büro","Levoit","Luftentfeuchter"].map(n=>S.devices.find(d=>d.n===n)).filter(Boolean);
    if(!favs.length)favs=S.devices.filter(d=>'on' in d).slice(0,6);
    return`${hero("Heim")}<div style="margin-top:22px">${scenesBlock()}</div>
@@ -473,7 +572,7 @@ const V={
     <div><section class="sec"><div class="title">Spitzenverbraucher</div><div class="card flush">${users.slice(0,8).map((d,i)=>`<div class="rank"><span class="ri">${ic(devIcon(d.t),36,1.6)}<span class="num">${i+1}</span></span><div class="grow"><div class="name">${esc(d.n)}</div><div class="sub">${d.w} W · ${esc(d.z.replace(/ \(.*\)/,""))}</div><div class="bar"><i style="width:${d.w/mx*100}%"></i></div></div></div>`).join("")||'<div class="rank sub">Gerade läuft nichts.</div>'}</div></section></div>
    </div><p class="note">${S.mode==="live"?"Der Solarverlauf füllt sich, solange die App geöffnet ist. Verbraucher zeigen die aktuelle Leistung.":"Beispielwerte."}</p>`}
 };
-const TITLES={home:["Startseite","home","var(--blue)"],rooms:["Räume","home","var(--blue)"],climate:["Klima","thermo","var(--orange)"],energy:["Heute","leaf","var(--green)"]};
+const TITLES={home:["Übersicht","home","var(--blue)"],rooms:["Räume","home","var(--blue)"],climate:["Klima","thermo","var(--orange)"],energy:["Heute","leaf","var(--green)"]};
 
 function settingsModal(){
   return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
@@ -491,13 +590,15 @@ function settingsModal(){
 
 function render(){
   $("#view").innerHTML=V[S.view]();
+  document.querySelectorAll(".snav[data-view]").forEach(b=>b.dataset.view===S.view?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  const w=S.weather;$("#wxmini").innerHTML=`<span style="color:var(--yellow)">${ic(w?WMO(w.code)[0]:"sun",22)}</span>${w?Math.round(w.t):14} °C`;
   const [t,i,c]=TITLES[S.view];const h=$("#vt");h.style.setProperty("--accent",c);
   h.innerHTML=`${ic(i,20)}<span style="color:${S.view==="climate"||S.view==="energy"?c:"var(--fg)"}">${t}</span>`;
   document.querySelectorAll("nav.tabs [data-view]").forEach(b=>b.dataset.view===S.view?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
   const cn=$("#conn");cn.className="conn"+(S.mode==="live"?" live":S.mode==="error"?" err":"");cn.querySelector("span").textContent=S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo";
   $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
 }
-function tick(){if(store.get("autonight",true)){const hr=new Date().getHours(),auto=hr>=22||hr<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
+function tick(){const n=new Date();$("#time").textContent=n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});$("#date").textContent=n.toLocaleDateString("de-DE",{weekday:"short",day:"numeric",month:"short"});if(store.get("autonight",true)){const hr=new Date().getHours(),auto=hr>=22||hr<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
 function setNight(on){S.night=on;document.body.classList.toggle("night",on);$("#nightbtn").setAttribute("aria-pressed",on)}
 
 async function toggle(d,val){const prev=d.on,pw=d.w;d.on=val==null?!d.on:val;d.w=d.on?(d.base||0):0;render();
@@ -554,7 +655,7 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible"&&!S.modal)connect(true)},10000);
 setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
 
-tick();setInterval(tick,60000);render();applyWake();
+tick();setInterval(tick,15000);render();applyWake();
 if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
 </script>
 

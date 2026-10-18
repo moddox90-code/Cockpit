@@ -7,246 +7,220 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zuhause">
-<meta name="theme-color" content="#0b0e13">
+<meta name="theme-color" content="#1e1f24">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 <title>Davids Zuhause</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: wall-panel cockpit — sidebar + top bar, 3-col card grid; iPad landscape gets larger touch targets; phone gets bottom bar + stacked cards. Dark-only by choice. */
+/* Layout: phone-first dark home app — centered page header, room sections with icon tiles + stat pills, bottom tab bar; wide screens put sections into columns. Dark-only by choice. */
 :root{
-  --bg:#0b0e13; --panel:#12161f; --card:#171c26; --card-hi:#1f2633; --edge:#242c3a;
-  --fg:#e9edf5; --muted:#8a93a6; --dim:#5d6678;
-  --blue:#4c8dff; --amber:#ffbf3c; --teal:#3fd0b4; --violet:#8b7bff; --red:#ff6370; --green:#46c37b;
-  --font:"Figtree",system-ui,-apple-system,sans-serif; --r:16px; --pad:16px; color-scheme:dark;
+  --bg:#141518; --bar:#1e1f24; --card:#24252b; --card-2:#2d2e35; --line:#34353d;
+  --fg:#f5f5f7; --muted:#8d8e96; --dim:#5f6068;
+  --blue:#3d8bff; --orange:#ff9f0a; --green:#7ccf3a; --yellow:#ffc53d; --red:#ff5a5f; --teal:#38d1c0;
+  --on-bg:#f2f2f5; --on-fg:#16171b;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Roboto","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--fg)}
-html,body{overflow-x:hidden;max-width:100%}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
-body{font-family:var(--font);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums;transition:filter .6s}
+html,body{background:var(--bg);color:var(--fg);overflow-x:hidden;max-width:100%}
+body{font-family:var(--font);font-size:15px;line-height:1.35;font-variant-numeric:tabular-nums;transition:filter .6s}
 body.night{filter:brightness(.6) saturate(.8)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bar)}
 button,input{font:inherit;color:inherit}
-.shell{overflow-x:clip;display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100%}
-aside{background:var(--panel);border-right:1px solid var(--edge);padding:18px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;height:100dvh}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:15px}
-.brand i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;color:#fff;flex:none}
-.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;border:0;background:none;color:var(--muted);cursor:pointer;text-align:left;font-weight:500;width:100%}
-.nav:hover{background:var(--card)}
-.nav[aria-current="page"]{background:rgba(76,141,255,.14);color:var(--fg)}
-.nav[aria-current="page"] svg{color:var(--blue)}
-.nav.first-bottom{margin-top:auto}
-main{min-width:0;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px 20px}
-.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:14px 0 16px;position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 78%,transparent)}
-.bar-l{display:flex;align-items:center;gap:12px;min-width:0}
-.bar h1{font-size:17px;font-weight:600;margin:0}
-.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);border:1px solid var(--edge);border-radius:999px;padding:4px 10px;background:none;cursor:pointer;white-space:nowrap}
+button{cursor:pointer}
+.app{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(100px + env(safe-area-inset-bottom,0px))}
+
+/* top header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));background:var(--bar);border-radius:0 0 50% 50% / 0 0 26px 26px;padding:12px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.top h1{margin:0;text-align:center;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.top h1 svg{color:var(--accent,var(--blue))}
+.round{width:40px;height:40px;border-radius:50%;border:0;background:var(--card-2);display:grid;place-items:center;color:var(--fg)}
+.round[aria-pressed="true"]{color:var(--yellow)}
+.conn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:0;background:var(--card-2);font-size:13px;color:var(--muted);white-space:nowrap}
 .conn i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.conn.live i{background:var(--green);box-shadow:0 0 8px var(--green)}
+.conn.live i{background:var(--green)}
 .conn.err i{background:var(--red)}
-.clock{display:flex;align-items:baseline;gap:10px}
-.clock b{font-size:26px;font-weight:600;letter-spacing:-.02em}
-.clock span{color:var(--muted);font-size:13px}
-.bar-r{justify-self:end;display:flex;align-items:center;gap:8px}
-.wx-mini{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
-.icobtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--edge);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
-.icobtn[aria-pressed="true"]{color:var(--amber);border-color:rgba(255,191,60,.4)}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
-.card{background:var(--card);border:1px solid var(--edge);border-radius:var(--r);padding:var(--pad);min-width:0;display:flex;flex-direction:column;gap:12px}
-.card h2{font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:9px}
-.card h2 .hi{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
-.card h2 small{margin-left:auto;font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
-.c-amber{background:rgba(255,191,60,.15);color:var(--amber)}.c-blue{background:rgba(76,141,255,.15);color:var(--blue)}
-.c-teal{background:rgba(63,208,180,.14);color:var(--teal)}.c-violet{background:rgba(139,123,255,.16);color:var(--violet)}
-.c-red{background:rgba(255,99,112,.15);color:var(--red)}.c-green{background:rgba(70,195,123,.15);color:var(--green)}
-.span2{grid-column:span 2}
+
+/* hero */
+.hero{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:-22px;position:relative;z-index:9;text-align:center}
+.hero .tile{width:76px;height:76px;border-radius:20px;background:var(--card-2);display:grid;place-items:center;color:var(--fg);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.hero h2{margin:6px 0 0;font-size:36px;font-weight:700;letter-spacing:-.02em}
+.hero .stats{display:flex;gap:18px;color:var(--muted);font-size:17px;flex-wrap:wrap;justify-content:center}
+.hero .stats span{display:inline-flex;align-items:center;gap:5px}
+
+/* sections */
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:8px 22px;margin-top:22px}
+@media (min-width:820px){.cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1150px){.cols.three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.cols>div{min-width:0}
+.sec{min-width:0;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.sh{display:flex;align-items:center;gap:12px;min-width:0;border:0;background:none;padding:0;text-align:left;width:100%}
+.sh .si{width:38px;height:38px;border-radius:10px;background:var(--card-2);display:grid;place-items:center;flex:none;color:var(--fg)}
+.sh h3{margin:0;font-size:21px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sh .chev{color:var(--muted);flex:none}
+.pill{margin-left:auto;display:inline-flex;align-items:center;gap:10px;background:var(--card);border-radius:999px;padding:6px 12px;font-size:15px;white-space:nowrap;flex:none}
+.pill span{display:inline-flex;align-items:center;gap:4px}
+.pill svg{color:var(--muted)}
+.title{font-size:24px;font-weight:700;margin:6px 0 2px}
+
+/* cards */
+.card{background:var(--card);border-radius:18px;padding:16px;min-width:0}
+.card.flush{padding:0;overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;min-width:0}
+.grow{flex:1;min-width:0}
+.name{font-size:17px;overflow-wrap:anywhere}
+.sub{font-size:14px;color:var(--muted)}
+.red{color:var(--red)!important}
+
+/* thermostat row */
+.thermo{display:grid;grid-template-columns:minmax(0,1fr) 70px;background:var(--card);border-radius:18px;overflow:hidden;min-height:100px}
+.thermo .main{display:flex;align-items:center;gap:16px;padding:14px 16px;min-width:0}
+.thermo .ctl{display:grid;grid-template-rows:1fr 1fr;border-left:1px solid var(--line)}
+.thermo .ctl button{border:0;background:none;color:var(--fg);display:grid;place-items:center}
+.thermo .ctl button+button{border-top:1px solid var(--line)}
+.thermo .ctl button:active{background:var(--card-2)}
+.thermo .ctl button:disabled{color:var(--dim);cursor:default}
+.temps{display:flex;align-items:baseline;gap:8px;font-size:30px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.temps .cur{color:var(--muted)}
+.temps .arr{font-size:18px;color:var(--muted)}
+.dev-ic{position:relative;flex:none;color:var(--fg)}
+.dev-ic .badge{position:absolute;right:-6px;bottom:-4px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--muted);color:var(--card);border:2px solid var(--card)}
+.dev-ic .badge.heat{background:var(--orange)}
+
+/* device tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.tile{position:relative;aspect-ratio:1/1;max-width:100%;border:0;border-radius:18px;background:var(--card);padding:12px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0;transition:background .2s,color .2s}
+.tile .ti{color:var(--fg);display:flex;justify-content:space-between;align-items:flex-start}
+.tile b{font-weight:500;font-size:14px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tile small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.on{background:var(--on-bg);color:var(--on-fg)}
+.tile.on .ti{color:var(--on-fg)}
+.tile.on small{color:#5c5d66}
+.tile.on .lamp-glow{color:#e7a500}
+.tile.off-line{opacity:.5}
+.tile .dot{width:10px;height:10px;border-radius:50%;background:var(--red)}
+.tile.static{cursor:default}
+
+/* scenes */
+.scenes{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.scene{flex:none;display:flex;align-items:center;gap:10px;border:0;background:var(--card);border-radius:14px;padding:12px 16px;font-weight:600;font-size:15px}
+.scene .sc{width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.scene:active{transform:scale(.97)}
+
+/* alerts / lists */
+.alert{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;background:none;width:100%;text-align:left}
+.alert+.alert{border-top:1px solid var(--line)}
+.alert .ai{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ai.r{background:rgba(255,90,95,.15);color:var(--red)}
+.ai.y{background:rgba(255,197,61,.15);color:var(--yellow)}
+.alert .tag{font-size:13px;color:var(--muted);white-space:nowrap;margin-left:auto;padding-left:8px}
+
 /* weather */
 .wx{display:flex;align-items:center;gap:14px}
-.wx b{font-size:42px;font-weight:600;letter-spacing:-.03em;line-height:1}
-.wx b sup{font-size:18px;font-weight:500}
-.kv{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;color:var(--muted);font-size:13px;align-items:center}
-.kv span:nth-child(3n){color:var(--fg);text-align:right}
-.fc{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--edge);padding-top:10px}
-.fc b{display:block;color:var(--fg);font-weight:600}
-/* lists */
-.list{display:flex;flex-direction:column}
-.li{display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:10px;border:0;background:none;text-align:left;width:100%;min-width:0}
-button.li{cursor:pointer}
-button.li:hover{background:var(--card-hi)}
-.ico{width:32px;height:32px;border-radius:9px;background:var(--card-hi);display:grid;place-items:center;color:var(--muted);flex:none}
-.grow{flex:1;min-width:0;overflow-wrap:anywhere}
-.grow small{display:block;color:var(--muted);font-size:12px}
-.val{font-weight:600;white-space:nowrap}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);flex:none}
-/* media */
-.spk{display:flex;gap:6px;flex-wrap:wrap}
-.spk button{border:1px solid var(--edge);background:none;border-radius:999px;padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer}
-.spk button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.spk button:disabled{opacity:.4;cursor:not-allowed}
-.np{display:flex;gap:12px;align-items:center}
-.art{width:58px;height:58px;border-radius:12px;flex:none;background:conic-gradient(from 200deg,var(--violet),var(--blue),var(--teal),var(--violet));position:relative}
-.art::after{content:"";position:absolute;inset:22px;border-radius:50%;background:var(--card)}
-.art.spin{animation:spin 6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.np small{color:var(--muted);display:block;font-size:12px}
-.ctrl{display:flex;justify-content:center;align-items:center;gap:24px}
-.ctrl button{border:0;background:none;cursor:pointer;color:var(--fg);display:grid;place-items:center;width:40px;height:40px}
-.ctrl .play{width:48px;height:48px;border-radius:50%;background:var(--fg);color:var(--bg)}
-.vol{display:flex;align-items:center;gap:10px;color:var(--muted)}
-input[type=range]{flex:1;accent-color:var(--blue);min-width:0}
+.wx b{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.wxrow{display:grid;grid-template-columns:repeat(6,1fr);text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
+.wxrow b{display:block;color:var(--fg);font-weight:600;font-size:15px}
+
 /* energy */
-.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.big b{font-size:32px;font-weight:600;letter-spacing:-.03em}
-.big span{color:var(--muted)}
-.chart{width:100%;height:auto;display:block}
-.chart text{fill:var(--dim);font-size:9px;font-family:var(--font)}
-.chips{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
-.chips b{color:var(--fg)}
-.balance{height:10px;border-radius:5px;background:var(--card-hi);display:flex;overflow:hidden}
+.kpis{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.kpi{display:flex;flex-direction:column}
+.kpi b{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.kpi b small{font-size:15px;font-weight:600;margin-left:3px}
+.kpi span{font-size:15px;color:var(--muted)}
+.vsep{width:1px;align-self:stretch;background:var(--line)}
+.chart{width:100%;height:auto;display:block;margin-top:14px}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--font)}
+.rank{display:flex;align-items:center;gap:16px;padding:14px 16px}
+.rank+.rank{border-top:1px solid var(--line)}
+.rank .ri{position:relative;flex:none;color:var(--fg)}
+.rank .num{position:absolute;right:-8px;bottom:-6px;width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;border:2px solid var(--card)}
+.rank .bar{height:4px;border-radius:2px;background:var(--line);margin-top:8px;overflow:hidden}
+.rank .bar i{display:block;height:100%;background:var(--green);border-radius:2px}
+.balance{height:8px;border-radius:4px;background:var(--card-2);display:flex;overflow:hidden;margin-top:14px}
 .balance i{display:block;height:100%}
-/* scenes */
-.scenes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.scene{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border-radius:12px;border:0;cursor:pointer;font-weight:600;text-align:left;min-height:84px;transition:transform .12s,filter .12s}
-.scene:hover{filter:brightness(1.15)}
-.scene:active{transform:scale(.97)}
-.s1{background:rgba(255,191,60,.15);color:#ffd27a}.s2{background:rgba(76,141,255,.15);color:#9cc0ff}
-.s3{background:rgba(139,123,255,.17);color:#bdb3ff}.s4{background:rgba(63,208,180,.12);color:#8de6d4}
-/* presence */
-.ppl{display:flex;flex-direction:column;gap:4px}
-.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff}
-.badge{font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.b-home{background:rgba(70,195,123,.15);color:var(--green)}.b-away{background:var(--card-hi);color:var(--muted)}.b-sleep{background:rgba(139,123,255,.16);color:var(--violet)}
-/* climate */
-.thr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--edge)}
-.thr:last-child{border-bottom:0}
-.thr .grow small .low{color:var(--red)}
-.step{width:34px;height:34px;border-radius:9px;border:1px solid var(--edge);background:var(--card-hi);cursor:pointer;font-size:17px}
-.thr b{min-width:52px;text-align:center;font-size:16px}
-.gauge{display:flex;flex-direction:column;gap:6px}
-.gauge .tr{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--amber) 0 30%,var(--green) 30% 60%,var(--blue) 60%);position:relative;opacity:.85}
-.gauge .tr i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--fg);transform:translateX(-50%)}
-.gauge .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+
+/* media */
+.np{display:flex;gap:14px;align-items:center}
+.art{width:64px;height:64px;border-radius:14px;flex:none;background:linear-gradient(135deg,#5b5cf0,#3d8bff 50%,#38d1c0)}
+.ctrl{display:flex;justify-content:center;align-items:center;gap:30px;margin-top:14px}
+.ctrl button{border:0;background:none;color:var(--fg);display:grid;place-items:center;width:44px;height:44px}
+.ctrl .play{width:54px;height:54px;border-radius:50%;background:var(--fg);color:var(--bg)}
+.vol{display:flex;align-items:center;gap:12px;color:var(--muted);margin-top:12px}
+input[type=range]{flex:1;accent-color:var(--blue);min-width:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:0;background:var(--card-2);border-radius:999px;padding:7px 13px;font-size:13px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+
 /* vacuum */
-.vac{display:flex;align-items:center;gap:16px}
-.vring{width:76px;height:76px;flex:none}
-.vring text{fill:var(--fg);font-size:15px;font-weight:600;font-family:var(--font)}
-.vbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.vbtns button{border:1px solid var(--edge);background:var(--card-hi);border-radius:10px;padding:10px 6px;cursor:pointer;font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
-.vbtns button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-/* alerts */
-.ico.c-red{background:rgba(255,99,112,.15);color:var(--red)}.ico.c-amber{background:rgba(255,191,60,.15);color:var(--amber)}
-.al .tag{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
-.ok{display:flex;align-items:center;gap:10px;color:var(--muted);padding:6px}
-/* tiles */
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
-.tile{border:1px solid var(--edge);background:var(--card-hi);border-radius:13px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;min-height:100px;transition:background .2s,border-color .2s;min-width:0}
-.tile .ti{color:var(--muted);display:flex;justify-content:space-between;align-items:center}
-.tile.on{background:rgba(255,191,60,.13);border-color:rgba(255,191,60,.4)}
-.tile.on .ti{color:var(--amber)}
-.tile b{font-weight:600;font-size:13px;overflow-wrap:anywhere}
-.tile small{color:var(--muted);font-size:12px;margin-top:auto}
-.tile.static{cursor:default}
-.tile.off-line{opacity:.55}
-.warnt{color:var(--red)!important}
-.sw{width:30px;height:18px;border-radius:999px;background:rgba(255,255,255,.14);position:relative;flex:none;transition:background .2s}
-.sw::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s}
-.tile.on .sw{background:var(--amber)}
-.tile.on .sw::after{transform:translateX(12px)}
-.th{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-.th button{width:30px;height:30px;border-radius:8px;border:1px solid var(--edge);background:var(--card);cursor:pointer;font-size:16px}
-.th b{font-size:18px}
-.cam{aspect-ratio:16/9;max-width:100%;border-radius:12px;background:repeating-linear-gradient(135deg,#1a212d 0 10px,#171d28 10px 20px);display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:12px}
-.cam b{display:block;color:var(--fg);margin-bottom:4px}
-.rtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.rtabs button{border:1px solid var(--edge);background:var(--card);border-radius:999px;padding:8px 14px;cursor:pointer;color:var(--muted);font-weight:500}
-.rtabs button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
-.note{color:var(--dim);font-size:12px;margin-top:14px}
-/* settings dialog */
-.scrim{position:fixed;inset:0;background:rgba(4,6,10,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
-.dlg{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:22px;width:min(460px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
-.dlg h3{margin:0;font-size:18px}
-.dlg p{margin:0;color:var(--muted);font-size:13px}
+.vbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.vbtns button{border:0;background:var(--card-2);border-radius:14px;padding:12px 6px;font-weight:600;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.vbtns .primary{background:var(--blue);color:#fff}
+
+/* tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--bar);border-top:1px solid #2a2b31;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+nav.tabs div{display:flex;max-width:640px;margin:0 auto}
+nav.tabs button{flex:1 1 0;min-width:0;border:0;background:none;color:#a3a4ab;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;font-size:12px}
+nav.tabs button[aria-current="page"]{color:var(--blue)}
+
+/* dialog */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:grid;place-items:end center}
+.dlg{background:var(--bar);border-radius:22px 22px 0 0;padding:20px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));width:min(560px,100%);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+@media (min-width:700px){.scrim{place-items:center;padding:20px}.dlg{border-radius:22px}}
+.dlg h3{margin:0;font-size:20px}
+.dlg p{margin:0;color:var(--muted);font-size:14px}
 .fld{display:flex;flex-direction:column;gap:6px}
-.fld label{font-size:12px;font-weight:600;color:var(--muted)}
-.fld input{background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:11px 12px;font-size:15px;width:100%}
+.fld label{font-size:13px;font-weight:600;color:var(--muted)}
+.fld input{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;width:100%}
 .fld input:focus{outline:2px solid var(--blue);outline-offset:0}
 .fld small{color:var(--dim);font-size:12px}
-.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.btn{border:1px solid var(--edge);background:var(--card);border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.msg{font-size:13px;padding:10px 12px;border-radius:10px;background:var(--card)}
-.msg.err{background:rgba(255,99,112,.12);color:#ffb0b7}
-.msg.okm{background:rgba(70,195,123,.12);color:#9fe3bc}
-.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
-.toggle-row input{width:20px;height:20px;accent-color:var(--blue)}
-.toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:12px}
+.trow input{width:22px;height:22px;accent-color:var(--blue)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:0;background:var(--card-2);border-radius:12px;padding:12px 16px;font-weight:600}
+.btn.primary{background:var(--blue);color:#fff}
+.msg{font-size:14px;padding:10px 12px;border-radius:12px}
+.msg.err{background:rgba(255,90,95,.14);color:#ffb3b5}
+.msg.ok{background:rgba(124,207,58,.14);color:#c4ec9f}
+.note{color:var(--dim);font-size:13px;margin:6px 2px}
+.toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(86px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-/* iPad / wall panel landscape: bigger touch */
-@media (min-width:1024px) and (pointer:coarse){
-  :root{--pad:20px;--r:20px}
-  body{font-size:15px}
-  .tile{min-height:116px}
-  .step,.th button{width:42px;height:42px}
-  .nav{padding:14px 12px}
-}
-@media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:1/-1}}
-@media (max-width:760px){
-  .shell{display:block}
-  aside{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;justify-content:space-around;gap:0;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--edge);z-index:10}
-  .brand,.nav.mob-hide{display:none}
-  .nav.first-bottom{margin-top:0}
-  .nav{flex:1 1 0;width:auto;min-width:0;flex-direction:column;gap:3px;font-size:11px;padding:7px 2px;justify-content:center;align-items:center;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nav .lg{display:none}
-  .card{max-width:100%}
-  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
-  .bar{grid-template-columns:1fr auto;top:env(safe-area-inset-top,0px)}
-  .bar h1,.clock{display:none}
-  .grid{grid-template-columns:minmax(0,1fr)}
-  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 </head>
 <body>
-<div class="shell">
-  <aside aria-label="Navigation">
-    <div class="brand"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/></svg></i>Davids Zuhause</div>
-    <button class="nav" data-view="overview" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/></svg>Übersicht</button>
-    <button class="nav" data-view="rooms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>Räume</button>
-    <button class="nav" data-view="climate"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
-    <button class="nav" data-view="energy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Energie</button>
-    <button class="nav first-bottom" data-open="settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellung<span class="lg">en</span></button>
-  </aside>
-  <main>
-    <div class="bar">
-      <div class="bar-l"><h1 id="vt">Übersicht</h1><button class="conn" id="conn" data-open="settings"><i></i><span>Demo</span></button></div>
-      <div class="clock"><b id="time">--:--</b><span id="date"></span></div>
-      <div class="bar-r">
-        <div class="wx-mini" id="wxmini"></div>
-        <button class="icobtn" id="nightbtn" aria-pressed="false" aria-label="Nachtmodus" title="Nachtmodus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
-      </div>
-    </div>
-    <div id="view"></div>
-  </main>
+<div class="app">
+  <header class="top">
+    <button class="conn" id="conn" data-open="settings"><i></i><span>Demo</span></button>
+    <h1 id="vt"></h1>
+    <button class="round" id="nightbtn" aria-pressed="false" aria-label="Nachtmodus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+  </header>
+  <main id="view"></main>
 </div>
+<nav class="tabs" aria-label="Bereiche"><div>
+  <button data-view="home" aria-current="page"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>Startseite</button>
+  <button data-view="rooms"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>Räume</button>
+  <button data-view="climate"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>Klima</button>
+  <button data-view="energy"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5C11 3.5 4.5 8 4.5 15.5c0 1.3.2 2.5.6 3.6L3 21.2l1.4 1.4 2.1-2.1c1.1.4 2.3.6 3.6.6C17 21.1 20.5 14 20.5 3.5zM8 18.5c2-4 5-7 9-9-3 3-5.5 6-7.5 9.6z"/></svg>Energie</button>
+  <button data-open="settings"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>Mehr</button>
+</div></nav>
 <div id="modal"></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-/* ---------- Icons ---------- */
 const P={
 lamp:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
-socket:'<rect x="4" y="4" width="16" height="16" rx="5"/><path d="M10 10v2M14 10v2"/>',
+socket:'<path d="M8 3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><circle cx="12" cy="12" r="3.5"/><path d="M11 11.2v1.6M13 11.2v1.6"/>',
 speaker:'<rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7.5" r="1"/>',
-thermostat:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',
-vacuum:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
+radiator:'<path d="M4 6v13M7 6v13M10 6v13M13 6v13M16 6v13M19 6v13M3 6h17M3 19h17M20 8h2"/>',
+thermo:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',
+vacuum:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/>',
 camera:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
-sensor:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>',
+sensor:'<rect x="6" y="3" width="12" height="18" rx="3"/><path d="M10 8h4M10 12h4"/>',
 solar:'<path d="M3 20l3-12h12l3 12zM9 8l-1 12M15 8l1 12M4.5 14h15"/>',
-air:'<path d="M3 8h12a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h17"/>',
+air:'<rect x="5" y="3" width="14" height="18" rx="4"/><path d="M9 8h6M9 11h6M9 14h6"/>',
 button:'<rect x="5" y="5" width="14" height="14" rx="3"/><circle cx="12" cy="12" r="2.5"/>',
 router:'<rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 13l-2-8M17 13l2-8"/>',
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -258,50 +232,55 @@ film:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/
 alert:'<path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
 batt:'<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>',
 drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
-wind:'<path d="M3 8h10a3 3 0 1 0-3-3M3 16h13a3 3 0 1 1-3 3M3 12h16"/>',
-home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
-users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
-music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
-check:'<path d="M5 12l5 5L20 7"/>',
-play:'<path d="M7 4v16l13-8z" fill="currentColor"/>',
-stop:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+home:'<path d="M12 3.2l9 7.3V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z" fill="currentColor" stroke="none"/>',
+bed:'<path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 15h18M6 9V6h5v3M13 9V6h5v3M3 18v2M21 18v2"/>',
+bath:'<path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM6 12V5a2 2 0 0 1 4 0M7 19l-1 2M17 19l1 2"/>',
+sofa:'<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2zM5 18v2M19 18v2"/>',
+desk:'<path d="M3 9h18M5 9v11M19 9v11M14 9v6h5M9 5h6v4H9z"/>',
+books:'<path d="M5 4h3v16H5zM10 7h3v13h-3zM15 5l3 .8-3.2 14.4-2.9-.6z"/>',
+door:'<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18M14.5 12h.01"/>',
+pot:'<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 10h20M9 6c0-1 1-1 1-2M14 6c0-1 1-1 1-2"/>',
+play:'<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
+stop:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
 dock:'<path d="M3 11l9-7 9 7M5 10v10h14V10"/>',
-leaf:'<path d="M5 21c0-9 5-15 15-16-1 10-7 15-15 16zM5 21l7-7"/>'};
-const ic=(t,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[t]||P.sensor}</svg>`;
+up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',chev:'<path d="M9 6l6 6-6 6"/>',
+arrdown:'<path d="M12 5v14M6 13l6 6 6-6"/>',flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-3 2-4 2-7 1.5 1 2 2 2 3 1-2 1-4 1-6z"/>',
+bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',leaf:'<path d="M5 21c0-9 5-15 15-16-1 10-7 15-15 16zM5 21l7-7"/>'};
+const ic=(t,s=22,w=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[t]||P.sensor}</svg>`;
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const roomIcon=z=>{z=z.toLowerCase();return z.includes("schlaf")?"bed":z.includes("bad")?"bath":z.includes("gäste")?"books":z.includes("wohn")?"sofa":z.includes("büro")?"desk":z.includes("flur")?"door":z.includes("küche")?"pot":"home"};
+const devIcon=t=>({lamp:"lamp",socket:"socket",thermostat:"radiator",speaker:"speaker",vacuum:"vacuum",camera:"camera",sensor:"sensor",solar:"solar",air:"air",button:"button",router:"router"}[t]||"sensor");
+const slug=z=>"r-"+z.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,"");
 
-/* ---------- Demo-Daten (aus deinen Screenshots) ---------- */
 const DEMO=[
-{n:"Lampe Büro",z:"Büro",t:"lamp",on:true,w:0},{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:21,cur:20.6,batt:70},
-{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked",warn:"Meldet einen Fehler"},{n:"TV Gästezimmer",z:"Büro",t:"socket",on:true,w:4},
+{n:"Lampe Büro",z:"Büro",t:"lamp",on:true,w:0},{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:20,cur:22.5,batt:70},
+{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked"},{n:"TV Gästezimmer",z:"Büro",t:"socket",on:true,w:4},
 {n:"Smart Control Büro",z:"Büro",t:"button",batt:80},
 {n:"Ikea Lampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Lavalampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},
 {n:"Vitrine",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Strom Fernseher",z:"Wohnzimmer",t:"socket",on:true,w:31},
-{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Ecoflow",z:"Wohnzimmer",t:"socket",on:false,w:0},
+{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Steckdose Ecovacs",z:"Wohnzimmer",t:"socket",on:true,w:6},
 {n:"Fritzbox",z:"Wohnzimmer",t:"router"},
 {n:"LED Flur",z:"Flur",t:"lamp",on:false,w:0},{n:"Flur",z:"Flur",t:"socket",on:true,w:3},
-{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:6},{n:"Kamera: Flur",z:"Flur",t:"camera"},
-{n:"Küche",z:"Küche",t:"speaker",warn:"Nicht erreichbar"},
-{n:"Bad",z:"Badezimmer",t:"socket",on:false,w:0},{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:22,cur:21.3,batt:80},
+{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:3},{n:"Kamera: Flur",z:"Flur",t:"camera"},
+{n:"Küche",z:"Küche",t:"speaker",warn:"Verbindung geschlossen"},
+{n:"Bad",z:"Badezimmer",t:"socket",on:false,w:0},{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:19,cur:22,batt:80},
 {n:"Badezimmer",z:"Badezimmer",t:"speaker"},
-{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:18,cur:18.9,batt:80},{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:2},
+{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:17,cur:21,batt:80},{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:2},
 {n:"Steckdose TV",z:"Gästezimmer",t:"socket",on:true,w:2},{n:"Steckdose Zelt",z:"Gästezimmer",t:"socket",on:true,w:12},
-{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:21.4,hum:52},
-{n:"Lampe Schlafzimmer",z:"Schlafzimmer",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer",t:"thermostat",temp:19,cur:18.4,batt:40},
-{n:"Schlafzimmer",z:"Schlafzimmer",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer",t:"button",batt:100},
+{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:25.2,hum:58,batt:100},
+{n:"Lampe Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"thermostat",temp:18,cur:24,batt:40},
+{n:"Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"button",batt:100},
 {n:"STREAM Solar System",z:"Heim",t:"solar",w:81,gen:true},{n:"EcoFlow STREAM",z:"Heim",t:"sensor",w:107}];
 const DEMO_USERS=[{name:"David",present:true,asleep:false}];
-const SOLAR_DEMO=[0,0,0,0,0,0,2,9,22,41,58,72,84,88,81,70,52,30,12,3,0,0,0,0];
+const SOLAR_DEMO=[0,0,0,0,0,0,0,0,40,180,420,610,700,560,480,300,120,20,0,0,0,0,0,0];
 
-/* ---------- Zustand ---------- */
 const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("dz_"+k,JSON.stringify(v))}catch(e){}}};
 let cfg=store.get("cfg",{addr:"",key:"",city:""});
-let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),view:"overview",room:null,spk:null,vol:35,night:false,modal:null};
+let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),histLive:false,view:"home",spk:null,vol:35,night:false,modal:null};
 const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
 function loadDemo(){S.devices=DEMO.map((d,i)=>({...d,id:"d"+i,base:d.w||({lamp:6,socket:5,air:8}[d.t]||0),caps:{}}));S.users=DEMO_USERS;S.mode="demo"}
 loadDemo();
 
-/* ---------- Homey Web API ---------- */
 function baseUrl(a){a=(a||"").trim().replace(/\/+$/,"");if(!a)return"";if(/^https?:\/\//.test(a))return a;
   if(/^\d+\.\d+\.\d+\.\d+$/.test(a))return`https://${a.replace(/\./g,"-")}.homey.homeylocal.com`;return"https://"+a}
 async function api(path,opt={}){
@@ -315,7 +294,7 @@ function mapDevice(d,zones){
   const c=d.capabilitiesObj||{},v=k=>c[k]?c[k].value:undefined;
   const t=CLS[d.virtualClass||d.class]||"router";
   const o={id:d.id,n:d.name,z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
-  if(v("onoff")!==undefined){o.on=!!v("onoff")}
+  if(v("onoff")!==undefined)o.on=!!v("onoff");
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
   if(v("target_temperature")!=null)o.temp=v("target_temperature");
   if(v("measure_temperature")!=null)o.cur=v("measure_temperature");
@@ -334,7 +313,7 @@ function mapDevice(d,zones){
 }
 async function connect(silent){
   if(!cfg.addr||!cfg.key){loadDemo();render();return}
-  if(sandboxed){S.mode="demo";S.err="In dieser Vorschau sind Verbindungen gesperrt. Öffne die App-Datei auf deinem iPad im Heimnetz.";render();return}
+  if(sandboxed){S.mode="demo";S.err="In dieser Vorschau sind Verbindungen gesperrt. Öffne die App über GitHub im Heimnetz.";render();return}
   try{
     const [devs,zones]=await Promise.all([api("/api/manager/devices/device/"),api("/api/manager/zones/zone/")]);
     S.devices=Object.values(devs).map(d=>mapDevice(d,zones));
@@ -342,10 +321,11 @@ async function connect(silent){
     api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
     Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
       .then(([a,b])=>{S.flows=[...Object.values(a).map(f=>({id:f.id,name:f.name,adv:false})),...Object.values(b).map(f=>({id:f.id,name:f.name,adv:true}))]});
-    if(!S.histLive){S.solarHist=Array(24).fill(0);S.histLive=true}const now=new Date().getHours();S.solarHist[now]=Math.max(S.solarHist[now],solarNow());
+    if(!S.histLive){S.solarHist=Array(24).fill(0);S.histLive=true}
+    const now=new Date().getHours();S.solarHist[now]=Math.max(S.solarHist[now],solarNow());
     if(!silent)toast("Mit Homey verbunden");
   }catch(e){
-    S.mode="error";S.err=e.message==="Failed to fetch"||e.name==="TypeError"?"Homey nicht erreichbar. Bist du im Heimnetz und stimmt die Adresse?":e.message;
+    S.err=e.name==="TypeError"?"Homey nicht erreichbar. Bist du im Heimnetz und stimmt die Adresse?":e.message;
     if(!S.devices.length||!S.devices[0].live)loadDemo();S.mode="error";
   }
   render();
@@ -358,11 +338,10 @@ async function setCap(d,cap,value,revert){
 async function triggerFlow(name){
   const f=S.flows.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
   if(!f){toast(`Lege in Homey einen Flow „${name}“ an`);return false}
-  try{await api(`/api/manager/flow/${f.adv?"advancedflow":"flow"}/${f.id}/trigger`,{method:"POST",body:"{}"});toast(`Flow „${name}“ gestartet`);setTimeout(()=>connect(true),1500);return true}
+  try{await api(`/api/manager/flow/${f.adv?"advancedflow":"flow"}/${f.id}/trigger`,{method:"POST",body:"{}"});toast(`„${name}“ gestartet`);setTimeout(()=>connect(true),1500);return true}
   catch(e){toast("Fehler: "+e.message);return false}
 }
 
-/* ---------- Wetter (Open-Meteo, ohne Schlüssel) ---------- */
 const WMO=c=>c===0?["sun","Sonnig"]:c<=2?["sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
 async function loadWeather(){
   if(!cfg.city||sandboxed){S.weather=null;return}
@@ -376,7 +355,6 @@ async function loadWeather(){
   render();
 }
 
-/* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)};
 const fT=v=>v==null?"–":(+v).toFixed(1).replace(".",",");
@@ -384,144 +362,147 @@ const dev=id=>S.devices.find(d=>d.id===id);
 const solarNow=()=>S.devices.filter(d=>d.gen).reduce((m,d)=>Math.max(m,d.w||0),0);
 const useNow=()=>S.devices.filter(d=>d.on&&!d.gen).reduce((s,d)=>s+(d.w||0),0);
 const zones=()=>{const c={};S.devices.forEach(d=>c[d.z]=(c[d.z]||0)+1);return Object.keys(c).filter(z=>z!=="Heim"&&z!=="Ohne Raum").sort((a,b)=>c[b]-c[a])};
-const alerts=()=>S.devices.filter(d=>d.warn).map(d=>({d,kind:"bad",txt:d.warn}))
-  .concat(S.devices.filter(d=>!d.warn&&d.batt!=null&&d.batt<=40&&d.t!=="vacuum").map(d=>({d,kind:"mid",txt:`Batterie ${d.batt} %`})));
-const H=(icon,cls,title,small)=>`<h2><span class="hi ${cls}">${ic(icon,15)}</span>${title}${small?`<small>${small}</small>`:""}</h2>`;
-const demoTag=()=>S.mode==="live"?"":"Beispiel";
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const tempOf=ds=>avg(ds.filter(d=>d.cur!=null&&d.t!=="thermostat").map(d=>d.cur))??avg(ds.filter(d=>d.cur!=null).map(d=>d.cur));
+const humOf=ds=>avg(ds.filter(d=>d.hum!=null).map(d=>d.hum));
+const alerts=()=>S.devices.filter(d=>d.warn).map(d=>({d,kind:"r",txt:d.warn}))
+  .concat(S.devices.filter(d=>!d.warn&&d.batt!=null&&d.batt<=40&&d.t!=="vacuum").map(d=>({d,kind:"y",txt:`Batterie ${d.batt} %`})));
+const statPill=(t,h)=>(t==null&&h==null)?"":`<span class="pill">${t!=null?`<span>${ic("thermo",16)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",16)}${Math.round(h)} %</span>`:""}</span>`;
+function secHead(z,link=true){const ds=S.devices.filter(d=>d.z===z);
+  return`<button class="sh" ${link?`data-room="${esc(z)}"`:""}><span class="si">${ic(roomIcon(z),22)}</span><h3>${esc(z)}</h3>${link?`<span class="chev">${ic("chev",20,2.4)}</span>`:""}${statPill(tempOf(ds),humOf(ds))}</button>`}
 
-/* ---------- Karten ---------- */
-function weatherCard(){
-  const w=S.weather;
-  const d=w||{place:"Beispiel",t:14,feel:12,hum:64,wind:3,code:1,hours:[["Jetzt",1,14],["13 Uhr",1,15],["14 Uhr",3,15],["15 Uhr",3,14],["16 Uhr",61,13],["17 Uhr",1,12]].map(x=>({h:x[0],code:x[1],t:x[2]}))};
-  const [i,txt]=WMO(d.code);
-  return`<section class="card">${H("sun","c-amber","Wetter",w?esc(d.place):"Beispiel")}
-   <div class="wx"><span style="color:${i==="sun"?"var(--amber)":"var(--muted)"}">${ic(i,50)}</span><div><b>${Math.round(d.t)}<sup>°C</sup></b><div style="color:var(--muted)">${txt}</div></div></div>
-   <div class="kv"><span>${ic("thermostat",15)}</span><span>Gefühlt</span><span>${Math.round(d.feel)} °C</span><span>${ic("drop",15)}</span><span>Luftfeuchte</span><span>${Math.round(d.hum)} %</span><span>${ic("wind",15)}</span><span>Wind</span><span>${Math.round(d.wind)} m/s</span></div>
-   <div class="fc">${d.hours.slice(0,6).map((h,k)=>{const [hi]=WMO(h.code);return`<div>${k===0&&!w?"Jetzt":h.h}<div style="color:${hi==="sun"?"var(--amber)":"var(--muted)"};margin:4px 0">${ic(hi,16)}</div><b>${Math.round(h.t)}°</b></div>`}).join("")}</div></section>`;
+function hero(title,icon){
+  const t=tempOf(S.devices),h=humOf(S.devices);
+  return`<div class="hero"><div class="tile">${ic(icon||"home",38)}</div><h2>${title}</h2><div class="stats">${t!=null?`<span>${ic("thermo",18)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",18)}${Math.round(h)} %</span>`:""}${S.weather?`<span>${ic(WMO(S.weather.code)[0],18)}${Math.round(S.weather.t)}° draußen</span>`:""}</div></div>`;
 }
-function roomsCard(){
-  return`<section class="card">${H("home","c-blue","Räume","Ist / Soll")}<div class="list">${zones().map(z=>{
-    const ds=S.devices.filter(d=>d.z===z),th=ds.find(d=>d.t==="thermostat"),sens=ds.find(d=>d.cur!=null),lit=ds.filter(d=>d.t==="lamp"&&d.on).length;
-    return`<button class="li" data-room="${esc(z)}"><span class="ico">${ic(th?"thermostat":"lamp",16)}</span><span class="grow">${esc(z)}<small>${lit?`${lit} Licht an · `:""}${ds.length} Geräte</small></span>${lit?'<span class="dot"></span>':""}<span class="val">${sens?fT(sens.cur)+"°":""}${th?` <span style="color:var(--dim);font-weight:500">/ ${fT(th.temp)}°</span>`:""}</span></button>`}).join("")}</div></section>`;
+function tile(d){
+  const off=d.warn&&d.t!=="vacuum"?" off-line":"";
+  const st=d.warn?`<small class="red">${esc(d.warn)}</small>`:`<small>${esc(
+    'on' in d?(d.on?(d.w?`${d.w} W`:"An"):"Aus"):d.t==="thermostat"?`${fT(d.cur)}° → ${fT(d.temp)}°`:d.hum!=null?`${fT(d.cur)}° · ${d.hum} %`:d.cur!=null?`${fT(d.cur)}°`:d.batt!=null?`${d.batt} %`:d.w!=null?`${d.w} W`:({speaker:"Lautsprecher",camera:"Kamera",router:"Online"}[d.t]||""))}</small>`;
+  const icn=`<span class="${d.t==="lamp"?"lamp-glow":""}">${ic(devIcon(d.t),30,1.7)}</span>`;
+  const inner=`<span class="ti">${icn}${d.warn?'<span class="dot"></span>':""}</span><span><b>${esc(d.n)}</b>${st}</span>`;
+  if('on' in d)return`<button class="tile${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}">${inner}</button>`;
+  return`<div class="tile static${off}">${inner}</div>`;
+}
+function thermoRow(d){
+  const heat=d.temp!=null&&d.cur!=null&&d.temp>d.cur;
+  return`<div class="thermo"><div class="main"><span class="dev-ic">${ic("radiator",40,1.6)}<span class="badge ${heat?"heat":""}">${ic(heat?"flame":"arrdown",13,2.6)}</span></span>
+   <div class="grow"><div class="name">${esc(d.n)}</div><div class="temps"><span class="cur">${fT(d.cur)}°</span><span class="arr">→</span><span>${fT(d.temp)}°</span></div>${d.batt!=null&&d.batt<=40?`<div class="sub red">Batterie ${d.batt} %</div>`:""}</div></div>
+   <div class="ctl"><button data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.n)} wärmer">${ic("up",24,2.4)}</button><button data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.n)} kälter">${ic("down",24,2.4)}</button></div></div>`;
+}
+function onoffRow(d){
+  return`<div class="thermo"><div class="main"><span class="dev-ic" style="color:${d.on?"var(--yellow)":"var(--fg)"}">${ic(devIcon(d.t),38,1.6)}</span><div class="grow"><div class="name">${esc(d.n)}</div><div class="sub">${d.on?`An${d.w?` · ${d.w} W`:""}${d.pm!=null?` · PM2,5 ${d.pm}`:""}`:"Aus"}</div></div></div>
+   <div class="ctl"><button data-set="${d.id}" data-v="1" aria-label="${esc(d.n)} an" ${d.on?"disabled":""}>${ic("up",24,2.4)}</button><button data-set="${d.id}" data-v="0" aria-label="${esc(d.n)} aus" ${d.on?"":"disabled"}>${ic("down",24,2.4)}</button></div></div>`;
+}
+const SCENES=[["Guten Morgen","sun","255,197,61"],["Außer Haus","away","61,139,255"],["Filmabend","film","165,139,255"],["Gute Nacht","moon","56,209,192"]];
+function scenesBlock(){return`<div class="scenes">${SCENES.map(s=>`<button class="scene" data-scene="${s[0]}"><span class="sc" style="background:rgba(${s[2]},.18);color:rgb(${s[2]})">${ic(s[1],18)}</span>${s[0]}</button>`).join("")}</div>`}
+function alertsCard(){const a=alerts();if(!a.length)return"";
+  return`<section class="sec"><div class="title">Hinweise</div><div class="card flush">${a.map(x=>`<button class="alert" data-room="${esc(x.d.z)}"><span class="ai ${x.kind}">${ic(x.kind==="r"?"alert":"batt",18)}</span><span class="grow"><span class="name">${esc(x.d.n)}</span><br><span class="sub">${esc(x.txt)}</span></span><span class="tag">${esc(x.d.z.replace(/ \(.*\)/,""))}</span></button>`).join("")}</div></section>`}
+function weatherCard(){
+  const w=S.weather||{place:"Beispiel",t:14,feel:12,hum:64,wind:3,code:1,hours:[["Jetzt",1,14],["13 Uhr",1,15],["14 Uhr",3,15],["15 Uhr",3,14],["16 Uhr",61,13],["17 Uhr",1,12]].map(x=>({h:x[0],code:x[1],t:x[2]}))};
+  const [i,txt]=WMO(w.code);
+  return`<section class="sec"><div class="title">Wetter <span class="sub" style="font-size:15px;font-weight:400">${esc(S.weather?w.place:"Beispiel")}</span></div><div class="card">
+   <div class="wx"><span style="color:${i==="sun"?"var(--yellow)":"var(--muted)"}">${ic(i,54,1.6)}</span><div><b>${Math.round(w.t)}°</b><div class="sub">${txt} · gefühlt ${Math.round(w.feel)}° · ${Math.round(w.hum)} % · ${Math.round(w.wind)} m/s</div></div></div>
+   <div class="wxrow">${w.hours.slice(0,6).map(h=>{const [hi]=WMO(h.code);return`<div>${h.h}<div style="color:${hi==="sun"?"var(--yellow)":"var(--muted)"};margin:6px 0">${ic(hi,20)}</div><b>${Math.round(h.t)}°</b></div>`}).join("")}</div></div></section>`;
+}
+function balanceBar(sol,u){const m=Math.max(sol,u,1);return`<div class="balance"><i style="width:${Math.min(sol,u)/m*100}%;background:var(--green)"></i><i style="width:${Math.max(0,sol-u)/m*100}%;background:var(--orange)"></i><i style="width:${Math.max(0,u-sol)/m*100}%;background:var(--red)"></i></div>`}
+function energyMini(){
+  const sol=solarNow(),u=useNow();
+  return`<section class="sec"><button class="sh" data-view="energy"><span class="si" style="color:var(--green)">${ic("leaf",20)}</span><h3>Energie</h3><span class="chev">${ic("chev",20,2.4)}</span></button><div class="card">
+   <div class="kpis"><div class="kpi"><b style="color:var(--orange)">${sol}<small>W</small></b><span>Solar</span></div><span class="vsep"></span><div class="kpi"><b style="color:var(--blue)">${u}<small>W</small></b><span>Verbrauch</span></div><span class="vsep"></span><div class="kpi"><b style="color:${sol>=u?"var(--green)":"var(--red)"}">${Math.abs(sol-u)}<small>W</small></b><span>${sol>=u?"Überschuss":"Netzbezug"}</span></div></div>
+   ${balanceBar(sol,u)}</div></section>`;
 }
 function mediaCard(){
   const spk=S.devices.filter(d=>d.t==="speaker");if(!spk.length)return"";
   if(!S.spk||!dev(S.spk))S.spk=(spk.find(s=>!s.warn)||spk[0]).id;
   const s=dev(S.spk),playing=!!s.playing,vol=s.vol??S.vol;
-  return`<section class="card">${H("music","c-violet","Medien","Chromecast")}
-   <div class="spk">${spk.map(x=>`<button data-spk="${x.id}" aria-pressed="${x.id===S.spk}" ${x.warn?"disabled title='Nicht erreichbar'":""}>${esc(x.z)}</button>`).join("")}</div>
-   <div class="np"><div class="art${playing?" spin":""}"></div><div style="min-width:0"><small>${esc(s.n)}</small><b>${esc(s.track||(playing?"Wiedergabe läuft":"Bereit"))}</b><small>${esc(s.artist||(S.mode==="live"?"":"Titel erscheinen live über Homey"))}</small></div></div>
-   <div class="ctrl"><button data-media="speaker_prev" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
-    <button class="play" data-media="play" aria-label="${playing?"Pause":"Abspielen"}">${playing?'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>':ic("play",20)}</button>
-    <button data-media="speaker_next" aria-label="Weiter"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button></div>
-   <div class="vol">${ic("speaker",16)}<input id="vol" type="range" min="0" max="100" value="${vol}" aria-label="Lautstärke"><span id="volv">${vol}</span></div></section>`;
-}
-function chart(){
-  const W=320,Hh=140,pad=22,bw=(W-pad)/24,max=Math.max(100,...S.solarHist)*1.05,now=new Date().getHours();
-  const bars=S.solarHist.map((v,i)=>{const bh=v/max*(Hh-30);return`<rect x="${(pad+i*bw+1.5).toFixed(1)}" y="${(Hh-18-bh).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${Math.max(bh,1).toFixed(1)}" rx="2" fill="${i===now?"var(--amber)":i<now?"var(--blue)":"rgba(76,141,255,.25)"}"/>`}).join("");
-  const top=Math.round(max/50)*50||100;
-  const grid=[0,top/2,top].map(v=>{const y=Hh-18-v/max*(Hh-30);return`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--edge)"/><text x="0" y="${y+3}">${v}</text>`}).join("");
-  const lab=[0,6,12,18,23].map(i=>`<text x="${pad+i*bw+bw/2}" y="${Hh-4}" text-anchor="middle">${String(i).padStart(2,"0")}</text>`).join("");
-  return`<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Solarleistung pro Stunde in Watt">${grid}${bars}${lab}</svg>`;
-}
-function energyCard(span){
-  const sol=solarNow(),u=useNow(),kwh=(S.solarHist.reduce((a,b)=>a+b,0)/1000).toFixed(2).replace(".",",");
-  const tot=Math.max(sol,u,1);
-  return`<section class="card${span?" span2":""}">${H("solar","c-amber","Energie",S.mode==="live"?"Solar heute":"Beispielverlauf")}
-   <div class="big"><b>${kwh} kWh</b><span>Solar erzeugt</span></div>${chart()}
-   <div class="balance" title="Solar gegen Verbrauch"><i style="width:${Math.min(sol,u)/tot*100}%;background:var(--green)"></i><i style="width:${Math.max(0,sol-u)/tot*100}%;background:var(--amber)"></i><i style="width:${Math.max(0,u-sol)/tot*100}%;background:var(--red)"></i></div>
-   <div class="chips"><span>Solar jetzt <b>${sol} W</b></span><span>Verbrauch <b>${u} W</b></span><span>${sol>=u?"Überschuss":"Netzbezug"} <b>${Math.abs(sol-u)} W</b></span></div></section>`;
-}
-const SCENES=[["Guten Morgen","sun","s1"],["Außer Haus","away","s2"],["Filmabend","film","s3"],["Gute Nacht","moon","s4"]];
-function scenesCard(){
-  return`<section class="card">${H("leaf","c-teal","Szenen",S.mode==="live"?"Homey-Flows":"")}<div class="scenes">${SCENES.map(s=>`<button class="scene ${s[2]}" data-scene="${s[0]}">${ic(s[1],22)}${s[0]}</button>`).join("")}</div></section>`;
-}
-function presenceCard(){
-  const st=u=>u.asleep?["b-sleep","Schläft"]:u.present?["b-home","Zuhause"]:["b-away","Unterwegs"];
-  return`<section class="card">${H("users","c-green","Anwesenheit",S.mode==="live"?"":"Beispiel")}<div class="ppl">${S.users.map(u=>{const [c,t]=st(u);
-    return`<div class="li"><span class="av">${esc(u.name[0]||"?")}</span><span class="grow">${esc(u.name)}</span><span class="badge ${c}">${t}</span></div>`}).join("")}</div>
-   <small style="color:var(--dim)">Kommt aus den Homey-Benutzern und deren Standort.</small></section>`;
-}
-function climateCard(span){
-  const th=S.devices.filter(d=>d.t==="thermostat"),hum=S.devices.filter(d=>d.hum!=null),air=S.devices.filter(d=>d.t==="air");
-  const h=hum.length?Math.round(hum.reduce((a,b)=>a+b.hum,0)/hum.length):null;
-  return`<section class="card${span?" span2":""}">${H("thermostat","c-red","Klima","Heizung & Luft")}
-   <div>${th.map(d=>`<div class="thr"><span class="grow">${esc(d.z)}<small>Ist ${fT(d.cur)}° · ${d.batt!=null?`<span class="${d.batt<=40?"low":""}">Batterie ${d.batt} %</span>`:""}</small></span>
-     <button class="step" data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.z)} kälter">−</button><b>${fT(d.temp)}°</b><button class="step" data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.z)} wärmer">+</button></div>`).join("")}</div>
-   ${h!=null?`<div class="gauge"><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Luftfeuchte ${esc(hum.map(x=>x.z).join(", "))}</span><b>${h} %</b></div><div class="tr"><i style="left:${Math.min(100,h)}%"></i></div><div class="lab"><span>trocken</span><span>40–60 % ideal</span><span>feucht</span></div></div>`:""}
-   ${air.length?`<div class="tiles">${air.map(tile).join("")}</div>`:""}</section>`;
+  return`<section class="sec"><div class="title">Musik</div><div class="card">
+   <div class="chips">${spk.map(x=>`<button class="chip" data-spk="${x.id}" aria-pressed="${x.id===S.spk}" ${x.warn?"disabled":""}>${esc(x.z.replace(/ \(.*\)/,""))}</button>`).join("")}</div>
+   <div class="np"><div class="art"></div><div class="grow"><div class="name">${esc(s.track||(playing?"Wiedergabe läuft":"Bereit"))}</div><div class="sub">${esc(s.artist||s.n)}</div></div></div>
+   <div class="ctrl"><button data-media="speaker_prev" aria-label="Zurück"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+    <button class="play" data-media="play" aria-label="${playing?"Pause":"Abspielen"}">${playing?'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>':ic("play",22)}</button>
+    <button data-media="speaker_next" aria-label="Weiter"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button></div>
+   <div class="vol">${ic("speaker",18)}<input id="vol" type="range" min="0" max="100" value="${vol}" aria-label="Lautstärke"><span id="volv">${vol}</span></div></div></section>`;
 }
 const VS={docked:"In der Station",charging:"Lädt",cleaning:"Saugt",spot_cleaning:"Saugt Bereich",stopped:"Angehalten"};
 function vacuumCard(){
   const v=S.devices.find(d=>d.t==="vacuum");if(!v)return"";
-  const b=v.batt??0,C=2*Math.PI*30;
-  return`<section class="card">${H("vacuum","c-blue","Saugroboter",esc(v.z))}
-   <div class="vac"><svg class="vring" viewBox="0 0 76 76"><circle cx="38" cy="38" r="30" fill="none" stroke="var(--card-hi)" stroke-width="7"/><circle cx="38" cy="38" r="30" fill="none" stroke="var(--teal)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-b/100)}" transform="rotate(-90 38 38)"/><text x="38" y="43" text-anchor="middle">${b}%</text></svg>
-    <div class="grow"><b>${esc(v.n)}</b><small>${esc(VS[v.vstate]||"Bereit")}</small>${v.warn?`<small class="warnt">${esc(v.warn)}</small>`:""}</div></div>
-   <div class="vbtns"><button class="primary" data-vac="cleaning">${ic("play",16)}Saugen</button><button data-vac="stopped">${ic("stop",16)}Stopp</button><button data-vac="docked">${ic("dock",16)}Zur Station</button></div></section>`;
+  return`<section class="sec"><div class="title">Saugroboter</div><div class="card">
+   <div class="row"><span class="dev-ic">${ic("vacuum",40,1.6)}</span><div class="grow"><div class="name">${esc(v.n)}</div><div class="sub">${esc(VS[v.vstate]||"Bereit")}${v.batt!=null?` · Akku ${v.batt} %`:""}</div>${v.warn?`<div class="sub red">${esc(v.warn)}</div>`:""}</div></div>
+   <div class="vbtns"><button class="primary" data-vac="cleaning">${ic("play",18)}Saugen</button><button data-vac="stopped">${ic("stop",18)}Stopp</button><button data-vac="docked">${ic("dock",18)}Station</button></div></div></section>`;
 }
-function alertsCard(){
-  const a=alerts();
-  return`<section class="card">${H("alert","c-red","Hinweise",a.length?`${a.length} offen`:"")}<div class="list">${a.length?a.map(x=>`<button class="li al" data-room="${esc(x.d.z)}"><span class="ico ${x.kind==="bad"?"c-red":"c-amber"}">${ic(x.kind==="bad"?"alert":"batt",16)}</span><span class="grow">${esc(x.d.n)}<small>${esc(x.txt)}</small></span><span class="tag">${esc(x.d.z)}</span></button>`).join(""):`<div class="ok">${ic("check")}Alles in Ordnung</div>`}</div></section>`;
+function presenceCard(){
+  const st=u=>u.asleep?["Schläft","var(--teal)"]:u.present?["Zuhause","var(--green)"]:["Unterwegs","var(--muted)"];
+  return`<section class="sec"><div class="title">Anwesenheit</div><div class="card flush">${S.users.map(u=>{const [t,c]=st(u);
+    return`<div class="alert"><span class="ai" style="background:var(--card-2);border-radius:50%;font-weight:700">${esc((u.name||"?")[0])}</span><span class="grow name">${esc(u.name)}</span><span class="tag" style="color:${c}">${t}</span></div>`}).join("")}</div></section>`;
 }
-function tile(d){
-  const off=d.warn&&d.t!=="vacuum"?" off-line":"";
-  if(d.t==="thermostat")return`<div class="tile static${off}"><span class="ti">${ic(d.t)}<small style="margin:0">Ist ${fT(d.cur)}°</small></span><b>${esc(d.n)}</b><div class="th"><button data-temp="${d.id}" data-d="-0.5" aria-label="Kälter">−</button><b>${fT(d.temp)}°</b><button data-temp="${d.id}" data-d="0.5" aria-label="Wärmer">+</button></div></div>`;
-  if('on' in d)return`<button class="tile${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}"><span class="ti">${ic(d.t)}<span class="sw"></span></span><b>${esc(d.n)}</b><small class="${d.warn?"warnt":""}">${esc(d.warn||(d.on?`An${d.w?` · ${d.w} W`:""}${d.pm!=null?` · PM2,5 ${d.pm}`:""}`:"Aus"))}</small></button>`;
-  const s=d.warn||(d.hum!=null?`${fT(d.cur)}° · ${d.hum} %`:d.cur!=null?`${fT(d.cur)}°`:d.batt!=null?`Batterie ${d.batt} %`:d.w!=null?`${d.w} W`:{speaker:"Chromecast",camera:"Kamera",router:"Online",vacuum:"Bereit"}[d.t]||"");
-  return`<div class="tile static${off}"><span class="ti">${ic(d.t)}</span><b>${esc(d.n)}</b><small class="${d.warn?"warnt":""}">${esc(s)}</small></div>`;
+function areaChart(){
+  const W=340,H=180,l=36,b=24,t=8,max=Math.max(150,...S.solarHist),top=Math.ceil(max/150)*150,x=i=>l+i*(W-l-6)/23,y=v=>H-b-(v/top)*(H-b-t);
+  const line=S.solarHist.map((v,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)).join(" ");
+  const grid=[0,1,2,3].map(k=>{const v=top/3*k;return`<line x1="${l}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#34353d"/><text x="${l-6}" y="${y(v)+4}" text-anchor="end">${Math.round(v)}</text>`}).join("");
+  const xl=[0,6,12,18,23].map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${i===23?"24:00":i+":00"}</text>`).join("");
+  const now=new Date().getHours();
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Solarleistung über den Tag in Watt"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d8bff" stop-opacity=".55"/><stop offset="1" stop-color="#3d8bff" stop-opacity=".05"/></linearGradient></defs>
+   ${grid}<path d="${line} L${x(23)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#sg)"/><path d="${line}" fill="none" stroke="#3d8bff" stroke-width="2"/><path d="${line}" fill="none" stroke="#ff9f0a" stroke-width="1" opacity=".7"/>
+   <circle cx="${x(now)}" cy="${y(S.solarHist[now])}" r="4" fill="#ff9f0a" stroke="#24252b" stroke-width="2"/>${xl}</svg>`;
 }
-function lightsCard(){
-  const l=S.devices.filter(d=>(d.t==="lamp"||d.t==="socket")&&'on' in d);
-  return`<section class="card span2">${H("lamp","c-amber","Licht & Steckdosen",`${l.filter(d=>d.on).length} an`)}<div class="tiles">${l.map(tile).join("")}</div></section>`;
-}
-function camCard(){const c=S.devices.find(d=>d.t==="camera");if(!c)return"";
-  return`<section class="card">${H("camera","c-violet",esc(c.n),"Google Nest")}<div class="cam"><div><b>Livebild</b>Nest-Kameras zeigen ihr Bild nur in der Google-Home-App.</div></div></section>`}
 
-/* ---------- Ansichten ---------- */
 const V={
- overview:()=>`<div class="grid">${weatherCard()}${roomsCard()}${mediaCard()}${energyCard()}${scenesCard()}${presenceCard()}${climateCard()}${alertsCard()}${vacuumCard()}${lightsCard()}${camCard()}</div>`,
- rooms:()=>{const zs=zones();if(!S.room||!zs.includes(S.room))S.room=zs[0];const ds=S.devices.filter(d=>d.z===S.room);
-   return`<div class="rtabs">${zs.map(z=>`<button data-room="${esc(z)}" aria-pressed="${z===S.room}">${esc(z)}</button>`).join("")}</div>
-   <section class="card">${H("home","c-blue",esc(S.room),`${ds.length} Geräte`)}<div class="tiles">${ds.map(tile).join("")}</div></section>`},
- climate:()=>`<div class="grid">${climateCard(true)}${weatherCard()}</div>`,
- energy:()=>{const u=S.devices.filter(d=>d.on&&d.w>0&&!d.gen).sort((a,b)=>b.w-a.w);
-   return`<div class="grid">${energyCard(true)}<section class="card">${H("lamp","c-amber","Verbraucher jetzt")}<div class="list">${u.map(d=>`<div class="li"><span class="ico">${ic(d.t,16)}</span><span class="grow">${esc(d.n)}<small>${esc(d.z)}</small></span><span class="val">${d.w} W</span></div>`).join("")||'<div class="ok">Gerade läuft nichts.</div>'}</div></section></div>
-   <p class="note">${S.mode==="live"?"Der Tagesverlauf füllt sich, solange die App geöffnet ist.":"Tagesverlauf ist ein Beispiel."}</p>`}
+ home:()=>{
+   let favs=["Strom Fernseher","Ikea Lampe","LED Flur","Lampe Büro","Levoit","Luftentfeuchter"].map(n=>S.devices.find(d=>d.n===n)).filter(Boolean);
+   if(!favs.length)favs=S.devices.filter(d=>'on' in d).slice(0,6);
+   return`${hero("Heim")}<div style="margin-top:22px">${scenesBlock()}</div>
+   <div class="cols three">
+    <div>${alertsCard()}<section class="sec"><div class="title">Favoriten</div><div class="tiles">${favs.map(tile).join("")}</div></section>${energyMini()}</div>
+    <div>${weatherCard()}${mediaCard()}</div>
+    <div>${vacuumCard()}${presenceCard()}</div>
+   </div>`},
+ rooms:()=>`${hero("Räume","home")}<div class="cols">${zones().map(z=>`<section class="sec" id="${slug(z)}">${secHead(z,false)}<div class="tiles">${S.devices.filter(d=>d.z===z).map(tile).join("")}</div></section>`).join("")}</div>`,
+ climate:()=>{const zs=zones().filter(z=>S.devices.some(d=>d.z===z&&(d.t==="thermostat"||d.t==="air")));
+   return`${hero("Heim")}<div class="cols">${zs.map(z=>{const ds=S.devices.filter(d=>d.z===z);
+     return`<section class="sec">${secHead(z)}${ds.filter(d=>d.t==="thermostat").map(thermoRow).join("")}${ds.filter(d=>d.t==="air").map(onoffRow).join("")}</section>`}).join("")}</div>`},
+ energy:()=>{
+   const sol=solarNow(),u=useNow(),kwh=(S.solarHist.reduce((a,b)=>a+b,0)/1000).toFixed(1).replace(".",",");
+   const users=S.devices.filter(d=>d.on&&d.w>0&&!d.gen).sort((a,b)=>b.w-a.w),mx=Math.max(1,...users.map(d=>d.w));
+   return`<div style="height:8px"></div><div class="cols">
+    <div><section class="sec"><div class="title">Strom</div><div class="card">
+     <div class="kpis"><span style="color:var(--blue)">${ic("bolt",30)}</span><div class="kpi"><b style="color:var(--blue)">${u}<small>W</small></b><span>Verbrauch jetzt</span></div><span class="vsep"></span><div class="kpi"><b style="color:${sol>=u?"var(--green)":"var(--red)"}">${Math.abs(sol-u)}<small>W</small></b><span>${sol>=u?"Überschuss":"Netzbezug"}</span></div></div>
+     ${balanceBar(sol,u)}</div></section>
+    <section class="sec"><div class="title">Solar</div><div class="card">
+     <div class="kpis"><span style="color:var(--yellow)">${ic("sun",30)}</span><div class="kpi"><b style="color:var(--orange)">${kwh}<small>kWh</small></b><span>Erzeugt heute</span></div><span class="vsep"></span><div class="kpi"><b style="color:var(--blue)">${sol}<small>W</small></b><span>Jetzt</span></div></div>${areaChart()}</div></section></div>
+    <div><section class="sec"><div class="title">Spitzenverbraucher</div><div class="card flush">${users.slice(0,8).map((d,i)=>`<div class="rank"><span class="ri">${ic(devIcon(d.t),36,1.6)}<span class="num">${i+1}</span></span><div class="grow"><div class="name">${esc(d.n)}</div><div class="sub">${d.w} W · ${esc(d.z.replace(/ \(.*\)/,""))}</div><div class="bar"><i style="width:${d.w/mx*100}%"></i></div></div></div>`).join("")||'<div class="rank sub">Gerade läuft nichts.</div>'}</div></section></div>
+   </div><p class="note">${S.mode==="live"?"Der Solarverlauf füllt sich, solange die App geöffnet ist. Verbraucher zeigen die aktuelle Leistung.":"Beispielwerte."}</p>`}
 };
-const TITLES={overview:"Übersicht",rooms:"Räume",climate:"Klima",energy:"Energie"};
+const TITLES={home:["Startseite","home","var(--blue)"],rooms:["Räume","home","var(--blue)"],climate:["Klima","thermo","var(--orange)"],energy:["Heute","leaf","var(--green)"]};
 
 function settingsModal(){
   return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
    <h3 id="st">Verbindung & Panel</h3>
-   <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz. Den API-Schlüssel legst du in der Homey Web App unter Einstellungen → API-Schlüssel an.</p>
-   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg okm">Verbunden · ${S.devices.length} Geräte</div>`:""}
-   <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"><small>Steht in der Homey-App unter Einstellungen → Allgemein.</small></div>
+   <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz.</p>
+   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg ok">Verbunden · ${S.devices.length} Geräte</div>`:""}
+   <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"></div>
    <div class="fld"><label for="f-key">API-Schlüssel</label><input id="f-key" type="password" autocomplete="off" placeholder="Schlüssel einfügen" value="${esc(cfg.key)}"><small>Wird nur auf diesem Gerät gespeichert.</small></div>
-   <div class="fld"><label for="f-city">Ort fürs Wetter</label><input id="f-city" autocomplete="off" placeholder="z. B. Hamburg" value="${esc(cfg.city)}"></div>
-   <div class="toggle-row"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></div>
-   <div class="toggle-row"><span>Nachts automatisch abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></div>
-   <div class="row"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
+   <div class="fld"><label for="f-city">Ort fürs Wetter</label><input id="f-city" autocomplete="off" placeholder="z. B. Stockach" value="${esc(cfg.city)}"></div>
+   <label class="trow" for="f-wake"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></label>
+   <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
+   <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
 
-/* ---------- Rendern ---------- */
 function render(){
-  $("#view").innerHTML=V[S.view]();$("#vt").textContent=TITLES[S.view];
-  document.querySelectorAll(".nav[data-view]").forEach(b=>b.dataset.view===S.view?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
-  const c=$("#conn");c.className="conn"+(S.mode==="live"?" live":S.mode==="error"?" err":"");c.querySelector("span").textContent=S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo";
-  const w=S.weather;$("#wxmini").innerHTML=`<span style="color:var(--amber)">${ic(w?WMO(w.code)[0]:"sun",22)}</span>${w?Math.round(w.t):14} °C`;
+  $("#view").innerHTML=V[S.view]();
+  const [t,i,c]=TITLES[S.view];const h=$("#vt");h.style.setProperty("--accent",c);
+  h.innerHTML=`${ic(i,20)}<span style="color:${S.view==="climate"||S.view==="energy"?c:"var(--fg)"}">${t}</span>`;
+  document.querySelectorAll("nav.tabs [data-view]").forEach(b=>b.dataset.view===S.view?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  const cn=$("#conn");cn.className="conn"+(S.mode==="live"?" live":S.mode==="error"?" err":"");cn.querySelector("span").textContent=S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo";
   $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
 }
-function tick(){const n=new Date();$("#time").textContent=n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
-  $("#date").textContent=n.toLocaleDateString("de-DE",{weekday:"short",day:"numeric",month:"short"});
-  if(store.get("autonight",true)){const h=n.getHours(),auto=h>=22||h<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
+function tick(){if(store.get("autonight",true)){const hr=new Date().getHours(),auto=hr>=22||hr<6;if(auto!==S.autoNight){S.autoNight=auto;setNight(auto)}}}
 function setNight(on){S.night=on;document.body.classList.toggle("night",on);$("#nightbtn").setAttribute("aria-pressed",on)}
 
-/* ---------- Aktionen ---------- */
-async function toggle(d){const prev=d.on,pw=d.w;d.on=!d.on;d.w=d.on?(d.base||0):0;render();
+async function toggle(d,val){const prev=d.on,pw=d.w;d.on=val==null?!d.on:val;d.w=d.on?(d.base||0):0;render();
   if(await setCap(d,"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
-async function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
+function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
 async function scene(name){
   if(S.mode==="live"){await triggerFlow(name);return}
   const set=(n,v)=>{const d=S.devices.find(y=>y.n===n);if(d){d.on=v;d.w=v?d.base:0}};
@@ -540,7 +521,7 @@ async function media(cmd){
 }
 async function vac(state){
   const v=S.devices.find(d=>d.t==="vacuum");if(!v)return;const prev=v.vstate;v.vstate=state;render();
-  if(S.mode==="live"){if(v.caps.vacuumcleaner_state)await setCap(v,"vacuumcleaner_state",state,()=>{v.vstate=prev});else if(v.caps.onoff)await setCap(v,"onoff",state==="cleaning");else{toast("Der Deebot bietet hier keine Steuerung an");return}}
+  if(S.mode==="live"){if(v.caps.vacuumcleaner_state)await setCap(v,"vacuumcleaner_state",state,()=>{v.vstate=prev});else if(v.caps.onoff)await setCap(v,"onoff",state==="cleaning");else{toast("Der Saugroboter bietet hier keine Steuerung an");return}}
   toast({cleaning:"Saugen gestartet",stopped:"Angehalten",docked:"Fährt zur Station"}[state]);
 }
 let wakeLock=null;
@@ -550,30 +531,30 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("button,[data-close]");if(!b)return;
   if(b.matches(".scrim")&&e.target!==b)return;
   if(b.dataset.close!==undefined){S.modal=null;render();return}
-  if(b.dataset.open){S.modal=b.dataset.open;render();setTimeout(()=>{const f=$("#f-addr");f&&f.focus()},50);return}
+  if(b.dataset.open){S.modal=b.dataset.open;render();return}
   if(b.dataset.save!==undefined){cfg={addr:$("#f-addr").value.trim(),key:$("#f-key").value.trim(),city:$("#f-city").value.trim()};store.set("cfg",cfg);
     store.set("wake",$("#f-wake").checked);store.set("autonight",$("#f-autonight").checked);applyWake();S.modal=null;loadWeather();connect();return}
   if(b.dataset.demo!==undefined){S.err="";loadDemo();S.modal=null;render();toast("Demo-Daten geladen");return}
   if(b.id==="nightbtn"){setNight(!S.night);return}
   if(b.dataset.view){S.view=b.dataset.view;render();scrollTo(0,0);return}
-  if(b.dataset.room){S.room=b.dataset.room;S.view="rooms";render();scrollTo(0,0);return}
+  if(b.dataset.room){S.view="rooms";render();const el=document.getElementById(slug(b.dataset.room));if(el)el.scrollIntoView({block:"start"});else scrollTo(0,0);return}
   if(b.dataset.scene)return scene(b.dataset.scene);
   if(b.dataset.spk){S.spk=b.dataset.spk;render();return}
   if(b.dataset.media)return media(b.dataset.media);
   if(b.dataset.vac)return vac(b.dataset.vac);
   if(b.dataset.temp){const d=dev(b.dataset.temp);if(d)temp(d,+b.dataset.d);return}
+  if(b.dataset.set){const d=dev(b.dataset.set);if(d)toggle(d,b.dataset.v==="1");return}
   if(b.dataset.tog){const d=dev(b.dataset.tog);if(d)toggle(d);return}
 });
 document.addEventListener("input",e=>{if(e.target.id==="vol"){S.vol=+e.target.value;$("#volv").textContent=S.vol;const s=dev(S.spk);if(s){s.vol=S.vol;clearTimeout(s._v);s._v=setTimeout(()=>{if(S.mode==="live"&&s.caps.volume_set)setCap(s,"volume_set",S.vol/100)},400)}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.modal){S.modal=null;render()}});
-/* Wandpanel: nach 3 Minuten ohne Berührung zurück zur Übersicht */
-let idle;const resetIdle=()=>{clearTimeout(idle);idle=setTimeout(()=>{if(S.view!=="overview"&&!S.modal){S.view="overview";render()}},180000)};
+let idle;const resetIdle=()=>{clearTimeout(idle);idle=setTimeout(()=>{if(S.view!=="home"&&!S.modal){S.view="home";render()}},180000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true}));resetIdle();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){applyWake();if(S.mode!=="demo")connect(true)}});
 setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible"&&!S.modal)connect(true)},10000);
 setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
 
-tick();setInterval(tick,15000);render();applyWake();
+tick();setInterval(tick,60000);render();applyWake();
 if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
 </script>
 

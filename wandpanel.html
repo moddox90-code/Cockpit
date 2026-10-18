@@ -73,6 +73,8 @@ button{cursor:pointer}
 .area.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .area.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .area.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.area.c5{grid-template-columns:repeat(5,minmax(0,1fr));font-size:.9em}
+.area.c5 .sw .pw{width:34px;height:34px}
 .bar2{display:flex;justify-content:flex-end;gap:8px}
 .pillbtn{border:0;background:var(--rail);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9em;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
 
@@ -91,26 +93,27 @@ button{cursor:pointer}
 .heat .ctl button:active{background:#323844}
 .heat .low{color:var(--red);font-size:.8em;font-weight:700}
 
-/* switch tile (light / plug) */
-.sw{position:relative;border:0;background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,20px);display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:0;min-width:0;overflow:hidden;transition:background .25s,color .25s}
+/* switch tile (light / plug): icon top-left, round power button top-right, name + status below */
+.sw{position:relative;border:0;background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,18px);display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:0;min-width:0;overflow:hidden;transition:background .2s}
 .sw .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.sw .ico{width:clamp(36px,7vh,58px);height:clamp(36px,7vh,58px);border-radius:50%;display:grid;place-items:center;background:var(--tile-2);color:var(--muted);transition:all .25s;flex:none}
-.sw .knob{width:44px;height:26px;border-radius:999px;background:var(--tile-2);position:relative;flex:none;transition:background .25s}
-.sw .knob::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#9aa2b1;transition:all .25s}
-.sw b{font-weight:700;font-size:1.08em;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
-.sw small{display:block;color:var(--muted);font-weight:600;font-size:.85em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sw .val{font-weight:800;font-size:1.45em;margin-top:4px;line-height:1.1}
-.sw.light.on{background:linear-gradient(150deg,#ffd885,#ffb84a);color:#2a1c00}
-.sw.light.on .ico{background:rgba(255,255,255,.55);color:#9a5d00}
-.sw.light.on small{color:#6b4a10}
-.sw.plug.on{background:linear-gradient(150deg,#1f3b37,#1c2b2b);box-shadow:inset 0 0 0 2px rgba(47,211,176,.55)}
-.sw.plug.on .ico{background:rgba(47,211,176,.18);color:var(--plug)}
-.sw.on .knob{background:rgba(0,0,0,.25)}
-.sw.plug.on .knob{background:var(--plug)}
-.sw.on .knob::after{left:21px;background:#fff}
+.sw .ico{display:grid;place-items:center;color:var(--fg);width:clamp(34px,7vh,52px);height:clamp(34px,7vh,52px);flex:none}
+.sw .ico svg,.sw .ico img{width:100%;height:100%}
+.dimg{filter:invert(1);opacity:.92;object-fit:contain}
+.sw .pw{width:clamp(36px,7vh,48px);height:clamp(36px,7vh,48px);border-radius:50%;background:var(--tile-2);color:#c9ced8;display:grid;place-items:center;flex:none;transition:all .2s}
+.sw.on .pw{background:rgba(76,141,255,.22);color:#4c8dff}
+.sw.light.on .pw{background:rgba(255,200,97,.22);color:var(--light)}
+.sw.on{background:#232832}
+.sw .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sw b{font-weight:600;font-size:1.08em;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.sw small{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;font-size:.92em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw small.watt{color:#4c8dff}
+.sw small.day{font-size:.8em;color:var(--dim)}
+.sw .dotl{width:12px;height:12px;border-radius:50%;background:var(--light);display:inline-block;flex:none}
 .sw.off-line{opacity:.45}
 .sw .warn{color:var(--red)}
 .sw:active{transform:scale(.98)}
+.hico{display:inline-grid;width:30px;height:30px;vertical-align:middle;margin-right:8px;color:var(--fg)}
+.hico svg,.hico img{width:100%;height:100%}
 
 /* dialog */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:grid;place-items:center;padding:16px}
@@ -143,7 +146,7 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
   .rail .blk,.rail .foot{grid-column:1/-1}
   .time{font-size:56px}
   .area{overflow:visible;grid-auto-rows:minmax(150px,auto)}
-  .area.c3,.area.c4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .area.c3,.area.c4,.area.c5{grid-template-columns:repeat(2,minmax(0,1fr))}
   .seg button small{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -202,28 +205,27 @@ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',leaf:'<path d="M5 21c0-9 5-15 15-1
 const ic=(t,s=22,w=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[t]||P.sensor}</svg>`;
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const roomIcon=z=>{z=z.toLowerCase();return z.includes("schlaf")?"bed":z.includes("bad")?"bath":z.includes("gäste")?"books":z.includes("wohn")?"sofa":z.includes("büro")?"desk":z.includes("flur")?"door":z.includes("küche")?"pot":"home"};
-const devIcon=t=>({lamp:"lamp",socket:"socket",thermostat:"radiator",speaker:"speaker",vacuum:"vacuum",camera:"camera",sensor:"sensor",solar:"solar",air:"air",button:"button",router:"router"}[t]||"sensor");
+const devIcon=t=>({battery:"batt",lamp:"lamp",socket:"socket",thermostat:"radiator",speaker:"speaker",vacuum:"vacuum",camera:"camera",sensor:"sensor",solar:"solar",air:"air",button:"button",router:"router"}[t]||"sensor");
 const slug=z=>"r-"+z.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,"");
 
 const DEMO=[
-{n:"Lampe Büro",z:"Büro",t:"lamp",on:true,w:0},{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:20,cur:22.5,batt:70},
-{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked"},{n:"TV Gästezimmer",z:"Büro",t:"socket",on:true,w:4},
-{n:"Smart Control Büro",z:"Büro",t:"button",batt:80},
 {n:"Ikea Lampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Lavalampe",z:"Wohnzimmer",t:"lamp",on:false,w:0},
-{n:"Vitrine",z:"Wohnzimmer",t:"lamp",on:false,w:0},{n:"Strom Fernseher",z:"Wohnzimmer",t:"socket",on:true,w:31},
-{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Steckdose Ecovacs",z:"Wohnzimmer",t:"socket",on:true,w:6},
-{n:"Fritzbox",z:"Wohnzimmer",t:"router"},
-{n:"LED Flur",z:"Flur",t:"lamp",on:false,w:0},{n:"Flur",z:"Flur",t:"socket",on:true,w:3},
-{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:3},{n:"Kamera: Flur",z:"Flur",t:"camera"},
-{n:"Küche",z:"Küche",t:"speaker",warn:"Verbindung geschlossen"},
-{n:"Bad",z:"Badezimmer",t:"socket",on:false,w:0},{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:19,cur:22,batt:80},
-{n:"Badezimmer",z:"Badezimmer",t:"speaker"},
-{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:17,cur:21,batt:80},{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:2},
-{n:"Steckdose TV",z:"Gästezimmer",t:"socket",on:true,w:2},{n:"Steckdose Zelt",z:"Gästezimmer",t:"socket",on:true,w:12},
-{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:25.2,hum:58,batt:100},
-{n:"Lampe Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"thermostat",temp:18,cur:24,batt:40},
-{n:"Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"button",batt:100},
-{n:"STREAM Solar System",z:"Heim",t:"solar",w:81,gen:true},{n:"EcoFlow STREAM",z:"Heim",t:"sensor",w:107}];
+{n:"Vitrine",z:"Wohnzimmer",t:"lamp",on:true,w:0},{n:"Strom Fernseher",z:"Wohnzimmer",t:"socket",on:true,w:108},
+{n:"Hub Wohnzimmer",z:"Wohnzimmer",t:"speaker"},{n:"Ecoflow",z:"Wohnzimmer",t:"socket",on:false,w:0},
+{n:"DELTA 2 Max",z:"Wohnzimmer",t:"battery",batt:5},{n:"Fritzbox",z:"Wohnzimmer",t:"router"},{n:"STREAM Ultra",z:"Wohnzimmer",t:"battery",batt:5},
+{n:"Küche",z:"Küche",t:"speaker"},{n:"EF Spülmaschine",z:"Küche",t:"socket",on:true,w:1},{n:"EF Waschmaschine",z:"Küche",t:"socket",on:true,w:1},
+{n:"Lampe Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"lamp",on:false,w:0},{n:"Heizung Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"thermostat",temp:18,cur:23.5,batt:40},
+{n:"Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"speaker"},{n:"Smart Control Schlafzimmer",z:"Schlafzimmer (Doppelbett)",t:"button",cur:22.5,batt:100},
+{n:"Heizung Bad",z:"Badezimmer",t:"thermostat",temp:19,cur:22,batt:80},{n:"Badezimmer",z:"Badezimmer",t:"speaker"},
+{n:"LED Flur",z:"Flur",t:"lamp",on:false,w:0},{n:"Kamera: Flur",z:"Flur",t:"camera"},{n:"Levoit",z:"Flur",t:"air",on:true,w:0,pm:3},
+{n:"EF Flur",z:"Flur",t:"socket",on:true,w:3},
+{n:"FB Steckdose",z:"Gästezimmer",t:"socket",on:true,w:11.8},{n:"Heizung Gästezimmer",z:"Gästezimmer",t:"thermostat",temp:17,cur:21,batt:80},
+{n:"Luftentfeuchter",z:"Gästezimmer",t:"air",on:true,w:1.7},{n:"Shelly H&T G3",z:"Gästezimmer",t:"sensor",cur:22.4,hum:58,batt:100},
+{n:"EF Luftentfeuchter",z:"Gästezimmer",t:"socket",on:true,w:4},
+{n:"Lampe Büro",z:"Büro",t:"lamp",on:false,w:0},{n:"FB Steckdose Ecovacs",z:"Büro",t:"socket",on:true,w:2},{n:"Repeater",z:"Büro",t:"socket",on:true,w:3.6},
+{n:"Heizung Büro",z:"Büro",t:"thermostat",temp:19,cur:22,batt:70},{n:"DEEBOT X11 OmniCyclone",z:"Büro",t:"vacuum",batt:100,vstate:"docked"},
+{n:"Smart Control Büro",z:"Büro",t:"button",cur:22.5,batt:80},{n:"EF-PC",z:"Büro",t:"socket",on:false,w:0},
+{n:"STREAM Solar System",z:"Heim",t:"solar",w:0,gen:true},{n:"BK21ZE1B7H630964",z:"Heim",t:"sensor",w:240}];
 const DEMO_USERS=[{name:"David",present:true,asleep:false}];
 const SOLAR_DEMO=[0,0,0,0,0,0,0,0,40,180,420,610,700,560,480,300,120,20,0,0,0,0,0,0];
 
@@ -231,7 +233,7 @@ const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d
 let cfg=store.get("cfg",{addr:"",key:"",city:""});
 let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),histLive:false,view:"home",spk:null,vol:35,night:false,modal:null};
 const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
-const DEMO_KWH={"Strom Fernseher":.706,"Steckdose Ecovacs":.437,"Steckdose Zelt":.131,"TV Gästezimmer":.084,"Flur":.061,"Luftentfeuchter":.042,"Steckdose TV":.03,"Lampe Büro":.018,"STREAM Solar System":3.5};
+const DEMO_KWH={"Strom Fernseher":.706,"FB Steckdose Ecovacs":.437,"FB Steckdose":.131,"Repeater":.088,"EF Luftentfeuchter":.081,"EF Flur":.064,"Luftentfeuchter":.041,"EF Spülmaschine":.021,"EF Waschmaschine":.019,"STREAM Solar System":3.5};
 function loadDemo(){S.devices=DEMO.map((d,i)=>({...d,id:"d"+i,base:d.w||({lamp:6,socket:5,air:8}[d.t]||0),caps:{},kwh:DEMO_KWH[d.n]}));S.users=DEMO_USERS;S.mode="demo";S.solarHist=SOLAR_DEMO.slice();S.daily="demo"}
 loadDemo();
 
@@ -243,11 +245,16 @@ async function api(path,opt={}){
   if(!r.ok)throw new Error("Homey antwortet mit Fehler "+r.status);
   const t=await r.text();return t?JSON.parse(t):null;
 }
-const CLS={light:"lamp",socket:"socket",thermostat:"thermostat",heater:"thermostat",vacuumcleaner:"vacuum",speaker:"speaker",tv:"speaker",camera:"camera",sensor:"sensor",solarpanel:"solar",battery:"solar",airpurifier:"air",airconditioning:"air",fan:"air",dehumidifier:"air",humidifier:"air",button:"button",remote:"button",other:"router"};
+/* Anzeigenamen: Homey-Name -> Name in der App */
+const RENAME={}; /* leer: die App zeigt die Namen aus Homey */
+const nm=n=>RENAME[n]||n;
+const CLS={light:"lamp",socket:"socket",thermostat:"thermostat",heater:"thermostat",vacuumcleaner:"vacuum",speaker:"speaker",tv:"speaker",camera:"camera",sensor:"sensor",solarpanel:"solar",battery:"battery",airpurifier:"air",airconditioning:"air",fan:"air",dehumidifier:"air",humidifier:"air",button:"button",remote:"button",other:"router"};
 function mapDevice(d,zones){
   const c=d.capabilitiesObj||{},v=k=>c[k]?c[k].value:undefined;
-  const t=CLS[d.virtualClass||d.class]||"router";
-  const o={id:d.id,n:d.name,z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
+  const info=[d.name,d.driverId,d.driverUri,d.ownerUri,d.class].join(" ");
+  let t=CLS[d.virtualClass||d.class]||"router";
+  if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
+  const o={id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
   if(v("onoff")!==undefined)o.on=!!v("onoff");
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
   if(v("target_temperature")!=null)o.temp=v("target_temperature");
@@ -261,6 +268,7 @@ function mapDevice(d,zones){
   if(v("speaker_track")!=null)o.track=v("speaker_track");
   if(v("speaker_artist")!=null)o.artist=v("speaker_artist");
   if(t==="solar")o.gen=true;
+  if(d.iconObj&&d.iconObj.url)o.icon=baseUrl(cfg.addr)+d.iconObj.url;
   o.meter=Object.keys(c).find(k=>k==="meter_power")||Object.keys(c).find(k=>k.startsWith("meter_power"));o.hasPower=!!c.measure_power;
   if(d.available===false)o.warn=d.unavailableMessage||"Nicht erreichbar";
   else if(v("alarm_battery")===true&&o.batt==null)o.warn="Batterie schwach";
@@ -315,7 +323,7 @@ const eParts=k=>k==null?["–",""]:k<1?[String(Math.round(k*1000)),"Wh"]:[k.toFi
 function dayTotals(){
   const gens=S.devices.filter(d=>d.gen);
   const sol=gens.some(d=>d.kwh!=null)?gens.reduce((a,d)=>a+(d.kwh||0),0):S.solarHist.reduce((a,b)=>a+b,0)/1000;
-  const cons=S.devices.filter(d=>!d.gen&&d.z!=="Heim"&&d.kwh!=null);
+  const cons=S.devices.filter(d=>!d.gen&&(d.z!=="Heim"||d.t==="socket")&&d.kwh!=null);
   return{sol,use:cons.reduce((a,d)=>a+d.kwh,0),cons:cons.sort((a,b)=>b.kwh-a.kwh),ready:S.daily==="ok"||S.daily==="demo"};
 }
 const kpi=(k,color,label)=>{const [v,u]=eParts(k);return`<div class="kpi"><b style="color:${color}">${v}<small>${u}</small></b><span>${label}</span></div>`};
@@ -338,7 +346,7 @@ const fT=v=>v==null?"–":(+v).toFixed(1).replace(".",",");
 const dev=id=>S.devices.find(d=>d.id===id);
 const solarNow=()=>S.devices.filter(d=>d.gen).reduce((m,d)=>Math.max(m,d.w||0),0);
 const useNow=()=>S.devices.filter(d=>d.on&&!d.gen).reduce((s,d)=>s+(d.w||0),0);
-const zones=()=>{const c={};S.devices.forEach(d=>c[d.z]=(c[d.z]||0)+1);return Object.keys(c).filter(z=>z!=="Heim"&&z!=="Ohne Raum").sort((a,b)=>c[b]-c[a])};
+const zones=()=>{const c={};S.devices.forEach(d=>c[d.z]=(c[d.z]||0)+1);const heimPlugs=S.devices.some(d=>d.z==="Heim"&&d.t==="socket");return Object.keys(c).filter(z=>(z!=="Heim"||heimPlugs)&&z!=="Ohne Raum").sort((a,b)=>c[b]-c[a])};
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 const tempOf=ds=>avg(ds.filter(d=>d.cur!=null&&d.t!=="thermostat").map(d=>d.cur))??avg(ds.filter(d=>d.cur!=null).map(d=>d.cur));
 const humOf=ds=>avg(ds.filter(d=>d.hum!=null).map(d=>d.hum));
@@ -366,11 +374,11 @@ async function applyWake(){try{if(store.get("wake",false)&&"wakeLock" in navigat
 /* ---------- Wandpanel-Oberfläche ---------- */
 P.plus='<path d="M12 5v14M5 12h14"/>';P.minus='<path d="M5 12h14"/>';P.power='<path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/>';
 const lamps=()=>S.devices.filter(d=>d.t==="lamp"&&'on' in d);
-const plugs=()=>S.devices.filter(d=>d.t==="socket"&&'on' in d&&d.z!=="Heim");
+const plugs=()=>S.devices.filter(d=>d.t==="socket");
 const heaters=()=>S.devices.filter(d=>d.t==="thermostat");
 const shortZone=z=>z.replace(/ \(.*\)/,"");
 let TAB=store.get("tab","heat");
-const cols=n=>n<=4?"c2":n<=6?"c3":"c4";
+const cols=n=>n<=4?"c2":n<=6?"c3":n<=8?"c4":"c5";
 
 function railHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
@@ -393,16 +401,19 @@ function segHTML(){
 }
 function heatTile(d){
   const on=d.temp!=null&&d.cur!=null&&d.temp>d.cur;
-  return`<div class="heat${on?" on":""}"><span class="room">${esc(shortZone(d.z))}</span><span class="state">${on?"heizt":"hält"}</span>
+  return`<div class="heat${on?" on":""}"><span class="room"><span class="hico">${devImg(d,"radiator",30)}</span>${esc(shortZone(d.z))}</span><span class="state">${on?"heizt":"hält"}</span>
    <div class="target"><b>${fT(d.temp)}°</b><span>Ist ${fT(d.cur)}°</span>${d.batt!=null&&d.batt<=40?`<span class="low">Batterie ${d.batt} %</span>`:""}</div>
    <div class="ctl"><button data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.n)} kälter">${ic("minus",26,2.4)}</button><button data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.n)} wärmer">${ic("plus",26,2.4)}</button></div></div>`;
 }
+function devImg(d,fallback,size){return d.icon?`<img class="dimg" src="${esc(d.icon)}" width="${size}" height="${size}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb='${ic(fallback,size,1.6)}'>`:ic(fallback,size,1.6)}
+const PW='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>';
 function swTile(d,kind){
-  const off=d.warn?" off-line":"";
-  const val=kind==="plug"?`<div class="val">${d.on&&d.w?`${d.w} W`:d.on?"An":"Aus"}</div><small>heute ${fE(d.kwh)}</small>`:`<div class="val">${d.on?"An":"Aus"}</div>`;
-  return`<button class="sw ${kind}${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}"><span class="top"><span class="ico">${ic(kind==="plug"?"socket":"lamp",24,1.8)}</span><span class="knob"></span></span>
-   <span><b>${esc(d.n)}</b><small class="${d.warn?"warn":""}">${esc(d.warn||shortZone(d.z))}</small>${val}</span></button>`;
+  const off=d.warn?" off-line":"",fb=kind==="plug"?"socket":"lamp",can='on' in d;
+  const st=d.warn?`<small class="warn">${esc(d.warn)}</small>`:kind==="plug"?(can&&!d.on?`<small>Aus</small>`:`<small class="watt">${ic("bolt",15,2.2)} ${fmtW(d.w)} W</small>`):`<small>${d.on?'<i class="dotl"></i>An':"Aus"}</small>`;
+  const inner=`<span class="top"><span class="ico">${devImg(d,fb,46)}</span>${can?`<span class="pw">${PW}</span>`:""}</span><span class="txt"><b>${esc(d.n)}</b>${st}${kind==="plug"&&d.kwh!=null?`<small class="day">heute ${fE(d.kwh)}</small>`:""}</span>`;
+  return can?`<button class="sw ${kind}${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}">${inner}</button>`:`<div class="sw ${kind}${off}">${inner}</div>`;
 }
+const fmtW=w=>w==null?"–":(Math.round(w*10)/10).toString().replace(".",",");
 function areaHTML(){
   const a=$("#area");
   if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||'<div class="sub">Keine Heizungen gefunden.</div>'}
@@ -439,5 +450,6 @@ render();tick();setInterval(tick,15000);applyWake();
 if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
 
 </script>
+
 </body>
 </html>

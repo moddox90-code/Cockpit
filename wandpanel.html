@@ -289,40 +289,55 @@ html.hub .panel{display:block;padding:3vh 3vw}
 .hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
 .hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
 .hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
-/* Hub v4.0 */
-.hubgrid{grid-template-columns:1.05fr 1fr 1.2fr;grid-template-rows:1fr 1fr auto}
-.hleft{grid-row:1 / span 3}
+/* Hub v4.1 */
+html.hub .hhours{margin-top:0}
+.hsec{margin-top:auto;color:var(--muted);font-size:2.1vh;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.hsec+.hhours+.hsec{margin-top:0}
+.hdays{display:grid;grid-template-columns:repeat(3,1fr);gap:.8vw}
+.hdays div{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:.6vw;background:rgba(255,255,255,.05);border-radius:1.6vh;padding:1vh .8vw;font-size:2.6vh}
+.hdays span{grid-column:1 / span 2;color:var(--muted);font-weight:600;font-size:2.2vh}
+.hdays b{font-weight:600}.hdays small{grid-column:2;color:var(--muted);font-size:2.2vh;margin-top:-1.2vh}
+.hleft{gap:1.4vh}.hleft .htime{font-size:13vh}.hleft .hwx b{font-size:7vh}
+.hubgrid{grid-template-columns:1fr 1.05fr 1.1fr;grid-template-rows:1fr auto;gap:2.2vh}
+.hleft{grid-row:1 / span 2;padding:3vh 2.4vw}
 .htime{font-size:15vh;white-space:nowrap}
-.hwx{flex-wrap:nowrap}.hwx b{white-space:nowrap}
-.hwx b{font-size:8vh}
-.hwx span{font-size:3vh}
+.hwx{flex-wrap:nowrap}.hwx b{font-size:8vh;white-space:nowrap}.hwx span{font-size:3vh}
 .hsun{display:grid;grid-template-columns:1fr 1fr;gap:1vw}
 .hsun div{display:flex;align-items:center;gap:1vw;background:rgba(255,181,71,.10);border-radius:1.8vh;padding:1.2vh 1vw}
 .hsun i{font-style:normal;color:#ffb547;display:flex}
 .hsun small{display:block;color:var(--muted);font-size:2.2vh;font-weight:600}
 .hsun b{font-size:3.6vh;font-weight:500}
-.hs{display:flex;flex-wrap:wrap;column-gap:.9vw;row-gap:.3vh}
-.hs span{white-space:nowrap}
-.hs{gap:.8vh .6vw}.hs span{background:rgba(255,255,255,.07);border-radius:1vh;padding:.3vh .7vw}
-.hsol{grid-column:3;grid-row:1 / span 2}
-.hsol .hb{margin-top:1vh;font-size:11vh}
-.hbars{flex:1;min-height:6vh;display:flex;align-items:flex-end;gap:.35vw;margin:1.6vh 0 .4vh}
-.hbars i{flex:1;background:#ffb547;border-radius:.5vh .5vh 0 0;min-height:2px;opacity:.85}
+.hcard{background:#141a28;border-radius:3vh;padding:2.4vh 1.8vw;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.hcal{background:linear-gradient(160deg,rgba(157,139,255,.18),#141a28 60%);background-color:#141a28}
+.hcal .hl{--acc:#b4a6ff}
+.hday{color:var(--muted);font-size:2.3vh;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin:1.6vh 0 .6vh}
+.hev{display:flex;align-items:baseline;gap:1.2vw;padding:1vh 0;border-bottom:1px solid rgba(255,255,255,.06);min-width:0}
+.hev:last-child{border-bottom:0}
+.hev b{flex:none;color:#c9bfff;font-weight:600;font-size:2.6vh;min-width:8.5vw}
+.hev span{font-size:3.2vh;font-weight:600;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hnone{color:var(--muted);font-size:2.8vh;margin-top:1vh}
+.hheat{flex-direction:row;align-items:center;gap:1.4vw;padding:1.8vh 1.8vw;background:linear-gradient(90deg,rgba(255,138,61,.18),#141a28 70%);background-color:#141a28}
+.hheat .ico{color:var(--heat);display:flex}
+.hheat b{font-size:6vh;font-weight:300;letter-spacing:-.03em}
+.hheat small{flex:1;color:var(--muted);font-size:2.4vh;font-weight:600;line-height:1.4}
+.hen{grid-column:3;grid-row:1 / span 2;background:linear-gradient(160deg,rgba(255,181,71,.16),#141a28 55%);background-color:#141a28}
+.hen .hl{--acc:#ffb547}
+.hkpi{display:grid;grid-template-columns:1fr 1fr;gap:1vw;margin-top:1.6vh}
+.hkpi div{background:rgba(255,255,255,.05);border-radius:1.8vh;padding:1.2vh 1vw}
+.hkpi small{display:block;color:var(--muted);font-size:2.2vh;font-weight:600}
+.hkpi b{font-size:5.6vh;font-weight:400;letter-spacing:-.03em;white-space:nowrap}
+.hkpi b em{font-style:normal;font-size:2.6vh;color:var(--muted);margin-left:.3vw}
+.hcmp{display:flex;flex-direction:column;gap:.6vh;margin-top:1.2vh}
+.hcmp div{height:1.4vh;border-radius:1vh;background:rgba(255,255,255,.07);overflow:hidden}
+.hcmp i{display:block;height:100%;border-radius:1vh}
+.hbars{flex:1;min-height:5vh;display:flex;align-items:flex-end;gap:.3vw;margin:1.6vh 0 .4vh}
+.hbars i{flex:1;background:#ffb547;border-radius:.5vh .5vh 0 0;min-height:2px;opacity:.8}
 .hbars i.now{background:#ffd27a;opacity:1}
-.hbl{display:flex;justify-content:space-between;color:var(--muted);font-size:2vh;font-weight:600}
-.hrows{display:flex;flex-direction:column;gap:.9vh;margin-top:1.6vh}
-.hrow{display:flex;align-items:center;justify-content:space-between;gap:1vw;font-size:2.8vh;font-weight:600}
+.hbl{display:flex;justify-content:space-between;color:var(--muted);font-size:1.9vh;font-weight:600}
+.hrows{display:flex;flex-direction:column;gap:.7vh;margin-top:1.2vh}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:1vw;font-size:2.6vh;font-weight:600}
 .hrow span{color:var(--muted);display:flex;align-items:center;gap:.6vw}
 .hrow b{font-weight:600;white-space:nowrap}
-.hbatt{height:1.2vh;border-radius:1vh;background:rgba(255,255,255,.08);overflow:hidden}
-.hbatt i{display:block;height:100%;background:var(--green)}
-.hfoot{grid-column:2 / span 2;background:#141a28;border-radius:2.4vh;padding:1.6vh 2vw;display:flex;align-items:center;gap:1vw;font-size:2.6vh;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hfoot.warn{background:linear-gradient(90deg,rgba(255,92,92,.18),#141a28 70%)}
-.hfoot .ico{color:var(--acc);display:flex;flex:none}
-.hfoot{flex-wrap:wrap;row-gap:.8vh;column-gap:2vw;white-space:normal;background:linear-gradient(90deg,rgba(157,139,255,.16),#141a28 70%)}
-.hev{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.hev b{color:#c3b8ff;font-weight:700;margin-right:.4vw}
-.hev em{font-style:normal;color:var(--muted);font-size:.85em}
 </style>
 
 </head>
@@ -580,10 +595,11 @@ async function loadWeather(){
   try{
     const g=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=${encodeURIComponent(cfg.city)}`)).json();
     const p=g.results&&g.results[0];if(!p)throw 0;
-    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=sunrise,sunset&forecast_days=1&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
+    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
     S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,
       sunrise:w.daily&&w.daily.sunrise?w.daily.sunrise[0].slice(11,16):null,sunset:w.daily&&w.daily.sunset?w.daily.sunset[0].slice(11,16):null,
-      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]}))};
+      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]})),
+      days:(w.daily&&w.daily.time||[]).map((t,i)=>({d:t,max:w.daily.temperature_2m_max[i],min:w.daily.temperature_2m_min[i],code:w.daily.weather_code[i]}))};
   }catch(e){S.weather=null}
   render();
 }
@@ -653,7 +669,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.0</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.1</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -747,40 +763,44 @@ function areaHTML(){
 }
 function hubHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
-  const pv=pvNow(),g=gridNow(),B=batteryInfo(),al=alerts(),L=lamps().filter(d=>d.on).length,P=plugs().filter(d=>d.on).length;
+  const pv=pvNow(),g=gridNow(),B=batteryInfo(),hum=humOf(S.devices),hc=houseCap(),houseW=hc?Math.max(0,hc.v):null;
   const hours=(w?w.hours:[]).slice(0,5).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span>${ic(hi,26,1.8)}<b>${Math.round(x.t)}°</b></div>`}).join("");
-  const sub=a=>`<div class="hs">${a.filter(Boolean).map(x=>`<span>${x}</span>`).join("")}</div>`;
-  const tile=(acc,icon,lab,big,unit,parts)=>`<div class="ht" style="--acc:${acc}"><div class="hl">${ic(icon,22,2)}<span>${lab}</span></div><div class="hb">${big}<small>${unit}</small></div>${sub(parts)}</div>`;
-  const hum=humOf(S.devices),hc=houseCap(),houseW=hc?Math.max(0,hc.v):null;
-  // Solar: Stundenbalken 6–20 Uhr
+  const days=(w&&w.days?w.days:[]).slice(0,3).map((x,i)=>{const [di]=WMO(x.code);return`<div><span>${i===0?"Heute":i===1?"Morgen":new Date(x.d+"T12:00").toLocaleDateString("de-DE",{weekday:"short"})}</span>${ic(di,24,1.8)}<b>${Math.round(x.max)}°</b><small>${Math.round(x.min)}°</small></div>`}).join("");
+  // Kalender
+  const C=S.cal||(S.mode==="demo"?{ok:true,today:[{t:"Zahnarzt",w:"16:30–17:15"},{t:"Training",w:"19:00–20:30"}],tomorrow:[{t:"Müll: Gelber Sack",w:"ganztägig"},{t:"Meeting Projekt",w:"09:00–10:00"}]}:null);
+  const evl=a=>a.map(e=>`<div class="hev"><b>${esc(/ganzt/.test(e.w)?"ganztags":e.w.replace(/–.*/,""))}</b><span>${esc(e.t)}</span></div>`).join("");
+  let cal;
+  if(!C)cal=`<div class="hnone">Termine werden geladen …</div>`;
+  else if(!C.ok)cal=`<div class="hnone">Kalender nicht verbunden</div>`;
+  else{const td=C.today.slice(0,4),tm=C.tomorrow.slice(0,Math.max(1,5-td.length));
+    cal=`<div class="hday">Heute</div>${td.length?evl(td):`<div class="hnone">Keine Termine</div>`}<div class="hday">Morgen</div>${tm.length?evl(tm):`<div class="hnone">Keine Termine</div>`}`}
+  // Energie heute
+  const sol=T.ready?T.sol:null,use=T.ready?T.use:null,mx=Math.max(sol||0,use||0,.001);
+  const [sv,su]=eParts(sol),[uv,uu]=eParts(use);
   const hist=(S.solarHist||[]).slice(6,21),mxH=Math.max(1,...hist),hNow=n.getHours();
   const bars=hist.map((v,i)=>`<i class="${i+6===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("");
   const batt=B.main?B.main.batt:null,bw=B.pw;
-  const battTxt=batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:"");
   const row=(icon,lab,val,col)=>`<div class="hrow"><span>${ic(icon,18,2)}${lab}</span><b${col?` style="color:${col}"`:""}>${val}</b></div>`;
-  const solar=`<div class="ht hsol" style="--acc:#ffb547"><div class="hl">${ic("sun",22,2)}<span>Solar</span></div>
-    <div class="hb">${pv}<small>W</small><small style="margin-left:1vw">jetzt</small></div>
-    <div class="hbars">${bars}</div><div class="hbl"><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>20 Uhr</span></div>
-    <div class="hrows">
-     ${row("sun","Ertrag heute",T.ready?fE(T.sol):"…","#ffb547")}
-     ${row("batt","Akku",battTxt,batt!=null&&batt<15?"var(--red)":"var(--green)")}
-     ${batt!=null?`<div class="hbatt"><i style="width:${batt}%;${batt<15?"background:var(--red)":""}"></i></div>`:""}
-     ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
-     ${row("bolt",g!=null&&g<0?"Einspeisung":"Netzbezug",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
-    </div></div>`;
-  const C=S.cal||(S.mode==="demo"?{ok:true,today:[{t:"Zahnarzt",w:"16:30–17:15"},{t:"Training",w:"19:00–20:30"}],tomorrow:[{t:"Müll: Gelber Sack",w:"ganztägig"}]}:null),ev=(e,d)=>`<span class="hev"><b>${esc(e.w)}</b> ${esc(e.t)}${d?` <em>${d}</em>`:""}</span>`;
-  const evs=C&&C.ok?[...C.today.map(e=>ev(e,"")),...C.tomorrow.map(e=>ev(e,"morgen"))]:[];
-  const foot=`<div class="hfoot" style="--acc:#9d8bff"><span class="ico">${ic("cal",20,2)}</span>${
-    !C?"Termine werden geladen …":!C.ok?"Kalender nicht verbunden":evs.length?evs.slice(0,3).join(""):"Heute und morgen keine Termine"}</div>`;
+  const netTxt=T.imp!=null?`${fE(T.imp)} bezogen${T.exp?` · ${fE(T.exp)} eingespeist`:""}`:null;
   return`<div class="hubgrid">
    <div class="hleft"><div class="htime" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="hdate" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div>
     <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}</span></div>
     <div class="hsun"><div><i>${ic("rise",30,1.9)}</i><span><small>Aufgang</small><b>${w&&w.sunrise||"–"}</b></span></div><div><i>${ic("set",30,1.9)}</i><span><small>Untergang</small><b>${w&&w.sunset||"–"}</b></span></div></div>
-    <div class="hhours">${hours}</div></div>
-   ${tile("var(--heat)","thermo","Heizung",fT(ist),"°",[heiz?heiz+" heizt":"alle halten",`Soll ${fT(soll)}°`,hum!=null?`Luft ${Math.round(hum)} %`:null])}
-   ${solar}
-   ${tile("var(--cool)","bolt",g!=null&&g<0?"Einspeisung":"Netz",g!=null?Math.abs(g):"–","W",[`Haus heute ${T.ready?fE(T.use):"…"}`])}
-   ${foot}
+    <div class="hsec">Nächste Stunden</div><div class="hhours">${hours||'<div class="hnone">–</div>'}</div>
+    <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div></div>
+   <div class="hcard hcal"><div class="hl">${ic("cal",22,2)}<span>Termine</span></div>${cal}</div>
+   <div class="hcard hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?heiz+" Heizung"+(heiz>1?"en":"")+" heizt":"alle halten"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div>
+   <div class="hcard hen"><div class="hl">${ic("sun",22,2)}<span>Energie heute</span></div>
+    <div class="hkpi"><div><small>Erzeugt</small><b style="color:#ffb547">${sv}<em>${su}</em></b></div><div><small>Verbraucht</small><b style="color:var(--cool)">${uv}<em>${uu}</em></b></div></div>
+    <div class="hcmp"><div><i style="width:${(sol||0)/mx*100}%;background:#ffb547"></i></div><div><i style="width:${(use||0)/mx*100}%;background:var(--cool)"></i></div></div>
+    <div class="hbars">${bars}</div><div class="hbl"><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>20 Uhr</span></div>
+    <div class="hrows">
+     ${row("sun","Solar jetzt",pv+" W","#ffb547")}
+     ${row("batt","Akku",batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""),batt!=null&&batt<15?"var(--red)":"var(--green)")}
+     ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
+     ${row("bolt",g!=null&&g<0?"Einspeisung":"Netz jetzt",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
+     ${netTxt?row("bolt","Netz heute",netTxt):""}
+    </div></div>
   </div>`;
 }
 function render(){
@@ -828,7 +848,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.0";
+const APP_VER="4.1";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

@@ -98,7 +98,7 @@ button{cursor:pointer}
 .cat .s2{color:var(--muted);font-weight:600;font-size:.92em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat:active{transform:scale(.98)}
 /* solar page */
-.area.solar{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;align-content:start}
+.area.solar{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:dense;grid-auto-rows:auto;align-content:start}
 .sc{background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,18px);min-width:0;display:flex;flex-direction:column;gap:8px}
 .sc.span3{grid-column:1/-1}.sc.span2{grid-column:span 2}
 .sc .lab{margin:0}
@@ -440,23 +440,73 @@ async function insightsToday(id,cap){let uri="homey:device:"+id,full=uri+":"+cap
   throw last;
 }
 function applyDaily(){S.devices.forEach(d=>{const x=DAILY[d.id];if(x&&x.first!=null){const cur=d.caps&&d.caps[d.meter]&&d.caps[d.meter].value;d.kwh=Math.max(0,(cur!=null?cur:x.last)-x.first)}})}
+/* EcoFlow / Smart Meter: Quellen erkennen */
+var GRID={};
+const capsOf=d=>Object.entries(d.caps||{}).filter(([k,c])=>c&&typeof c.value==="number");
+const isW=c=>!c.units||/^W$/i.test(c.units);
+const isKWh=c=>/kWh/i.test(c.units||"");
+function gridDev(){return S.devices.find(d=>/^BK\d/i.test(d.n)||/smart ?meter|smartmeter/i.test(d.n+" "+(d.raw?d.raw.drv:"")))}
+function ultraDev(){return S.devices.find(d=>/stream\s*ultra/i.test(d.n))||S.devices.find(d=>/stream/i.test(d.n)&&d.t==="battery")}
+function pvSource(){
+  const u=ultraDev();
+  if(u){const c=capsOf(u).find(([k,c])=>isW(c)&&/(pv|solar).*(total|sum)|(total|sum).*(pv|solar)/i.test(k))||capsOf(u).find(([k,c])=>isW(c)&&/pv|solar/i.test(k)&&!/limit/i.test(k));if(c)return{d:u,cap:c[0]}}
+  const devs=S.devices.filter(d=>d.t!=="socket"&&d!==gridDev()&&(d.gen||d.t==="battery"||/stream|delta|powerstream|ecoflow/i.test(d.n)));
+  for(const d of devs){const c=capsOf(d).find(([k,c])=>isW(c)&&/(pv|solar).*(total|sum)|(total|sum).*(pv|solar)/i.test(k));if(c)return{d,cap:c[0]}}
+  for(const d of devs){const c=capsOf(d).find(([k,c])=>isW(c)&&/^(measure_power\.)?(pv|solar)$/i.test(k));if(c)return{d,cap:c[0]}}
+  const g=S.devices.find(d=>d.gen&&d.hasPower);if(g)return{d:g,cap:"measure_power"};
+  return null;
+}
+function pvNow(){const s=pvSource();if(!s)return 0;const c=s.d.caps&&s.d.caps[s.cap];return Math.max(0,Math.round(c&&typeof c.value==="number"?c.value:(s.d.w||0)))}
+function ultraCap(re,excl){const u=ultraDev();if(!u)return null;const c=capsOf(u).find(([k,c])=>isW(c)&&re.test(k+" "+(c.title||""))&&!/limit|enable|set_/i.test(k)&&!(excl&&excl.test(k)));return c?{d:u,cap:c[0],v:Math.round(c[1].value)}:null}
+const houseCap=()=>ultraCap(/load|house|home|haus|consum|verbrauch/i);
+const gridCap=()=>ultraCap(/grid|netz|mains/i,/feed/i);
+function meterNow(){const g=gridDev();return g&&g.w!=null?Math.round(g.w):null}
+function gridCheck(){const u=gridCap(),m=meterNow();
+  if(u==null&&m==null)return{src:null,v:null,ok:null,u:null,m:null};
+  if(u==null)return{src:"meter",v:m,ok:false,u:null,m,why:"Ultra meldet keinen Netzwert"};
+  if(m==null)return{src:"ultra",v:u.v,ok:null,u:u.v,m:null};
+  const diff=Math.abs(u.v-m),ok=diff<=Math.max(60,Math.abs(m)*.25);
+  return{src:ok?"ultra":"meter",v:ok?u.v:m,ok,u:u.v,m,why:ok?"":`Abweichung ${diff} W`}}
+function gridNow(){return gridCheck().v}
+function gridMeters(){const g=gridDev();if(!g)return{};const ks=capsOf(g).filter(([k,c])=>isKWh(c)||/^meter_/.test(k));
+  const exp=ks.find(([k,c])=>/export|einspeis|feed|return|produc|out/i.test(k+" "+(c.title||"")));
+  const imp=ks.find(([k,c])=>k!==(exp&&exp[0])&&/import|bezug|consum|in\b|delivered|^meter_power$/i.test(k+" "+(c.title||"")))||ks.find(([k])=>k!==(exp&&exp[0])&&!/net|netto/i.test(k));
+  return{g,imp:imp&&imp[0],exp:exp&&exp[0]}}
+function batteryInfo(){const u=ultraDev();const b=u&&u.batt!=null?[u]:[];
+  const main=b[0];let pw=null;
+  if(main){const c=capsOf(main).find(([k,c])=>isW(c)&&/bat/i.test(k)&&/power|watt|charge|discharge/i.test(k)&&!/limit/i.test(k));if(c)pw=Math.round(c[1].value)}
+  return{main,list:b,pw}}
+function integrate(vals){const mid=new Date();mid.setHours(0,0,0,0);const now=Date.now();const H=Array(24).fill(0);
+  const pts=vals.map(x=>({t:new Date(x.t).getTime(),v:Math.max(0,+x.v)})).filter(x=>x.t>=mid.getTime()).sort((a,b)=>a.t-b.t);
+  for(let i=0;i<pts.length;i++){const a=pts[i],bT=i+1<pts.length?pts[i+1].t:now,bV=i+1<pts.length?pts[i+1].v:a.v;let t0=a.t;
+    while(t0<bT){const hr=new Date(t0).getHours(),hEnd=new Date(t0);hEnd.setMinutes(60,0,0);const t1=Math.min(bT,hEnd.getTime());const f0=(t0-a.t)/Math.max(1,bT-a.t),f1=(t1-a.t)/Math.max(1,bT-a.t);
+      const v0=a.v+(bV-a.v)*f0,v1=a.v+(bV-a.v)*f1;H[hr]+=(v0+v1)/2*(t1-t0)/3600000;t0=t1}}
+  return H}
+
 async function loadDaily(){
   if(S.mode!=="live")return;S.dailyAt=Date.now();
   const meters=S.devices.filter(d=>d.meter),gens=S.devices.filter(d=>d.gen&&d.hasPower);
   let ok=0,err="";
   await Promise.all(meters.map(async d=>{try{const v=await insightsToday(d.id,d.meter);if(v.length){DAILY[d.id]={first:v[0].v,last:v[v.length-1].v};ok++}}catch(e){err=e.message}}));
-  const hist=Array(24).fill(0);
-  await Promise.all(gens.map(async d=>{try{const v=await insightsToday(d.id,"measure_power");const h=Array(24).fill(0),c=Array(24).fill(0);v.forEach(x=>{const k=new Date(x.t).getHours();h[k]+=x.v;c[k]++});h.forEach((sum,k)=>{if(c[k])hist[k]+=sum/c[k]});ok++}catch(e){err=e.message}}));
-  S.solarHist=hist.map(v=>Math.round(v));
+  const src=pvSource();S.pvWh=null;S.pvSrc=src?src.d.n+" · "+src.cap:"–";
+  const u=ultraDev(),pvMeter=u&&capsOf(u).find(([k,c])=>isKWh(c)&&/pv|solar/i.test(k+" "+(c.title||""))&&!/limit/i.test(k));
+  if(pvMeter){try{const v=await insightsToday(u.id,pvMeter[0]);const cur=pvMeter[1].value;if(v.length)S.pvWhMeter=Math.max(0,(cur-v[0].v)*1000)}catch(e){}}
+  if(src){try{const v=await insightsToday(src.d.id,src.cap);const H=integrate(v);S.solarHist=H.map(x=>Math.round(x));S.pvWh=H.reduce((a,b)=>a+b,0);ok++}catch(e){err=e.message}}
+  GRID={};const hc=houseCap();const gm=gridMeters();
+  for(const key of ["imp","exp"]){const cap=gm[key];if(!cap)continue;try{const v=await insightsToday(gm.g.id,cap);const cur=gm.g.caps[cap]&&gm.g.caps[cap].value;if(v.length&&typeof cur==="number")GRID[key]=Math.max(0,cur-v[0].v);ok++}catch(e){err=e.message}}
+  if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);GRID.house=integrate(v).reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
   S.daily=ok?"ok":"fail";S.dailyErr=err;applyDaily();render();
 }
 const fE=k=>k==null?"–":k<1?`${Math.round(k*1000)} Wh`:`${k.toFixed(2).replace(".",",")} kWh`;
 const eParts=k=>k==null?["–",""]:k<1?[String(Math.round(k*1000)),"Wh"]:[k.toFixed(2).replace(".",","),"kWh"];
 function dayTotals(){
   const gens=S.devices.filter(d=>d.gen);
-  const sol=gens.some(d=>d.kwh!=null)?gens.reduce((a,d)=>a+(d.kwh||0),0):S.solarHist.reduce((a,b)=>a+b,0)/1000;
+  const sol=S.pvWhMeter!=null?S.pvWhMeter/1000:S.pvWh!=null?S.pvWh/1000:gens.some(d=>d.kwh!=null)?gens.reduce((a,d)=>a+(d.kwh||0),0):S.solarHist.reduce((a,b)=>a+b,0)/1000;
+  const imp=GRID.imp!=null?GRID.imp:null,exp=GRID.exp!=null?GRID.exp:null;
+  const viaMeter=imp!=null?imp+sol-(exp||0):null,gc=gridCheck();
+  const house=GRID.house!=null&&(gc.ok!==false||viaMeter==null)?GRID.house:viaMeter;
   const cons=S.devices.filter(d=>!d.gen&&(d.z!=="Heim"||d.t==="socket")&&d.kwh!=null);
-  return{sol,use:cons.reduce((a,d)=>a+d.kwh,0),cons:cons.sort((a,b)=>b.kwh-a.kwh),ready:S.daily==="ok"||S.daily==="demo"};
+  const plugUse=cons.reduce((a,d)=>a+d.kwh,0);return{sol,use:house!=null?house:plugUse,house,plugUse,imp,exp,cons:cons.sort((a,b)=>b.kwh-a.kwh),ready:S.daily==="ok"||S.daily==="demo"};
 }
 const kpi=(k,color,label)=>{const [v,u]=eParts(k);return`<div class="kpi"><b style="color:${color}">${v}<small>${u}</small></b><span>${label}</span></div>`};
 const WMO=c=>c===0?["sun","Sonnig"]:c<=2?["sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
@@ -497,8 +547,8 @@ function settingsModal(){
    <label class="trow" for="f-wake"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></label>
    <label class="trow" for="f-autofull"><span>Bei Berührung Vollbild (ohne Browserleiste)</span><input type="checkbox" id="f-autofull" ${store.get("autofull",true)?"checked":""}></label>
    <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
-   <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""} · Verlauf-Logs: ${LOGIX?Object.keys(LOGIX).length:"?"} · Modus: ${INS_MODE||"–"}</div><div>${esc(INS_TRIED.join(" | "))}</div><div>Log-Beispiele: ${esc(LOGSAMPLE||"–")}</div></div></details>
-   <p style="font-size:12px">Version 3.2</p>
+   <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""} · Verlauf-Logs: ${LOGIX?Object.keys(LOGIX).length:"?"} · Modus: ${INS_MODE||"–"} · Solar-Quelle: ${esc(S.pvSrc||"–")} · Netz-Abgleich: ${(()=>{const c=gridCheck();return c.src?`${c.src} (Ultra ${c.u??"–"} W / Zähler ${c.m??"–"} W)`:"–"})()}</div><div>${esc(INS_TRIED.join(" | "))}</div><div>Log-Beispiele: ${esc(LOGSAMPLE||"–")}</div></div></details>
+   <p style="font-size:12px">Version 3.6</p>
    <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
@@ -522,10 +572,10 @@ let TAB="home";
 const cols=n=>n<=4?"c2":n<=6?"c3":n<=8?"c4":"c5";
 
 function demoSolarCaps(){if(S.mode!=="demo")return;const C=(t,u,v)=>({title:t,units:u,value:v});const set=(n,caps,extra)=>{const d=S.devices.find(x=>x.n===n);if(d){d.caps=caps;Object.assign(d,extra||{})}};
-  set("STREAM Solar System",{measure_power:C("Leistung","W",240),"measure_power.pv1":C("PV 1","W",132),"measure_power.pv2":C("PV 2","W",108),"measure_power.grid":C("Netz","W",-15)},{w:240});
-  set("STREAM Ultra",{measure_battery:C("Akku","%",62),"measure_power.battery":C("Akku-Leistung","W",-85),"measure_power.load":C("Hausverbrauch","W",155),"measure_temperature":C("Temperatur","°C",24),"measure_capacity":C("Kapazität","Wh",1920)},{batt:62});
+  set("STREAM Solar System",{measure_power:C("Leistung","W",37)},{w:37});
+  set("STREAM Ultra",{pv_charge_power_total:C("PV gesamt","W",37),measure_battery:C("Akku","%",4),"battery_power":C("Akku-Leistung","W",37),"measure_power.grid":C("Netz","W",297),"measure_power.load":C("Hausverbrauch","W",297),"measure_temperature":C("Temperatur","°C",24)},{batt:4});
   set("DELTA 2 Max",{measure_battery:C("Akku","%",5),"measure_power.in":C("Eingang","W",0),"measure_power.out":C("Ausgang","W",0),"measure_temperature":C("Temperatur","°C",21)},{batt:5});
-  set("BK21ZE1B7H630964",{measure_power:C("Leistung","W",240),"meter_power":C("Zähler","kWh",412.6)},{});}
+  set("BK21ZE1B7H630964",{measure_power:C("Netzleistung","W",271),"meter_power.imported":C("Gesamtbezug","kWh",1481.01),"meter_power.exported":C("Gesamteinspeisung","kWh",321.95)},{w:271});S.pvWh=240;GRID={house:2.04,imp:1.8,exp:0};}
 demoSolarCaps();const _ld=loadDemo;loadDemo=function(){_ld();demoSolarCaps()};
 function railHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
@@ -536,9 +586,9 @@ function railHTML(){
    <div class="blk"><span class="lab">Innen</span><div class="inside">${t!=null?`<span>${ic("thermo",20)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",20)}${Math.round(h)} %</span>`:""}</div></div>
    <div class="blk"><span class="lab">Energie heute</span>
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
-    <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
+    <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.2</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.6</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -546,14 +596,13 @@ const CATS={heat:["Heizung","thermo","var(--heat)"],light:["Licht","lamp","var(-
 const isSolarDev=d=>d.t!=="socket"&&!isAir(d)&&(d.gen||d.t==="battery"||d.t==="solar"||/eco ?flow|stream|delta|powerstream|powerocean/i.test(d.n+" "+(d.raw?d.raw.drv:""))||/^BK\d/i.test(d.n));
 const solarDevs=()=>S.devices.filter(isSolarDev);
 function capNum(d,re){let sum=null;Object.entries(d.caps||{}).forEach(([k,c])=>{if(c&&typeof c.value==="number"&&re.test(k+" "+(c.title||""))&&(!c.units||/W$/i.test(c.units)&&!/kW?h/i.test(c.units))){sum=(sum||0)+c.value}});return sum}
-function pvNow(){const devs=solarDevs();const g=S.devices.filter(d=>d.gen).reduce((a,d)=>a+(d.w||0),0);const pv=devs.reduce((a,d)=>{const v=capNum(d,/pv|solar/i);return v!=null?a+v:a},0);return Math.round(Math.max(g,pv))}
 function batAvg(){const b=solarDevs().map(d=>d.batt).filter(x=>x!=null);return b.length?Math.round(b.reduce((a,x)=>a+x,0)/b.length):null}
 function catSummary(k){
-  if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}° in den Räumen`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"alle halten"} · Soll Ø ${fT(soll)}°`]}
+  if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}°`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"alle halten"} · Soll ${fT(soll)}°`]}
   if(k==="light"){const L=lamps(),n=L.filter(d=>d.on).length;return[n?`${n} von ${L.length} an`:"alle aus",L.filter(d=>d.on).map(d=>d.n).join(", ")||"Tippen zum Schalten"]}
   if(k==="plug"){const P=plugs(),n=P.filter(d=>d.on).length,w=P.filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);return[`${n} von ${P.length} an`,`zusammen ${fmtW(Math.round(w))} W`]}
   if(k==="air"){const A=airs(),pm=(A.find(d=>d.pm!=null)||{}).pm,dh=A.find(d=>/luftentfeucht/i.test(d.n)),h=dh?humOf(S.devices.filter(x=>x.z===dh.z)):humOf(S.devices);return[`${A.filter(d=>d.on).length} von ${A.length} an`,[pm!=null?`PM2,5 ${pm}`:null,h!=null?`Luftfeuchte ${Math.round(h)} %`:null].filter(Boolean).join(" · ")||"Luftreiniger & Entfeuchter"]}
-  if(k==="solar"){const T=dayTotals(),b=batAvg();return[`${pvNow()} W jetzt`,[T.ready?`heute ${fE(T.sol)}`:null,b!=null?`Akku ${b} %`:null].filter(Boolean).join(" · ")||"EcoFlow"]}
+  if(k==="solar"){const T=dayTotals(),B=batteryInfo(),g=gridNow();return[`${pvNow()} W Solar`,[T.ready?`heute ${fE(T.sol)}`:null,B.main?`Akku ${B.main.batt} %`:null,g!=null?(g<0?`speist ${-g} W ein`:`Netz ${g} W`):null].filter(Boolean).join(" · ")||"EcoFlow"]}
 }
 function segHTML(){
   const sg=$("#seg");if(TAB==="home"){sg.hidden=true;return""}sg.hidden=false;
@@ -574,13 +623,19 @@ function solarChart(){
    ${[0,6,12,18,23].map(i=>`<text x="${x(i)}" y="${Hh-5}" text-anchor="middle">${i===23?"24":i}:00</text>`).join("")}</svg>`;
 }
 function solarHTML(){
-  const T=dayTotals(),b=batAvg(),pv=pvNow(),devs=solarDevs(),use=plugs().filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);
+  const T=dayTotals(),pv=pvNow(),g=gridNow(),B=batteryInfo(),gc0=gridCheck(),devs=ultraDev()?[ultraDev()].concat(gc0.src=="meter"&&gridDev()?[gridDev()]:[]):solarDevs();
+  const hcNow=houseCap(),house=hcNow?Math.max(0,hcNow.v):null;
   const kpi=(lab,val,unit,sub,col)=>`<div class="sc"><span class="lab">${lab}</span><div class="kv" style="color:${col}">${val}<small>${unit}</small></div><div class="ksub">${sub}</div></div>`;
-  const [ev,eu]=eParts(T.ready?T.sol:null);
-  let h=kpi("Solar jetzt",pv,"W",pv>use?`Überschuss ca. ${Math.round(pv-use)} W`:`Steckdosen ziehen ${Math.round(use)} W`,"#ffb547")
-   +kpi("Heute erzeugt",ev,eu,T.ready?"seit Mitternacht":S.daily==="fail"?"Verlauf nicht lesbar":"wird geladen …","var(--green)")
-   +`<div class="sc"><span class="lab">Speicher</span><div class="kv" style="color:${b!=null&&b<15?"var(--red)":"var(--cool)"}">${b!=null?b:"–"}<small>%</small></div><div class="bat"><i style="width:${b||0}%;background:${b!=null&&b<15?"var(--red)":"var(--cool)"}"></i></div><div class="ksub">${solarDevs().filter(d=>d.batt!=null).map(d=>esc(d.n)+" "+d.batt+" %").join(" · ")||"kein Akku gemeldet"}</div></div>`
-   +`<div class="sc span3"><span class="lab">Solarleistung heute</span>${solarChart()}</div>`;
+  const E=k=>{const [v,u]=eParts(T.ready?k:null);return[v,u]};
+  const [sv,su]=E(T.sol),[hv,hu]=E(T.house),[iv,iu]=E(T.imp),[xv,xu]=E(T.exp);
+  let h=kpi("Solar jetzt",pv,"W",`heute ${sv} ${su}`,"#ffb547")
+   +(()=>{const c=gridCheck();if(c.v==null)return"";const [iv,iu]=E(T.imp),[xv,xu]=E(T.exp);
+      const src=c.src==="ultra"?"laut STREAM Ultra":"laut Messgerät am Sicherungskasten";
+      const chk=c.u!=null&&c.m!=null?`<div class="ksub" style="color:${c.ok?"var(--green)":"var(--light)"}">${c.ok?"✓ stimmig":"⚠ "+esc(c.why)}: Ultra ${c.u} W · Zähler ${c.m} W</div>`:c.why?`<div class="ksub" style="color:var(--light)">⚠ ${esc(c.why)}</div>`:"";
+      return`<div class="sc"><span class="lab">${c.v<0?"Einspeisung jetzt":"Vom Netz jetzt"}</span><div class="kv" style="color:var(--cool)">${Math.abs(c.v)}<small>W</small></div><div class="ksub">${src}${T.imp!=null?` · heute ${iv} ${iu} bezogen${T.exp?`, ${xv} ${xu} eingespeist`:""}`:""}</div>${chk}</div>`})()
+   +`<div class="sc"><span class="lab">Speicher</span><div class="kv" style="color:${B.main&&B.main.batt<15?"var(--red)":"var(--green)"}">${B.main?B.main.batt:"–"}<small>%</small></div><div class="bat"><i style="width:${B.main?B.main.batt:0}%;background:${B.main&&B.main.batt<15?"var(--red)":"var(--green)"}"></i></div><div class="ksub">${B.pw!=null?(B.pw>0?`lädt mit ${B.pw} W`:B.pw<0?`entlädt ${-B.pw} W`:"Ruhe"):""}${B.list.length>1?" · "+B.list.filter(d=>d!==B.main).map(d=>esc(d.n)+" "+d.batt+" %").join(" · "):""}</div></div>`
+   +(T.house!=null?kpi("Hausverbrauch heute",hv,hu,hcNow?`jetzt ${house} W`:"aus Zähler + Solar","var(--fg)"):"")
+   +`<div class="sc span2"><span class="lab">Solarleistung heute · Quelle ${esc(ultraDev()?ultraDev().n:"EcoFlow")}</span>${solarChart()}</div>`;
   h+=devs.map(d=>{const caps=Object.entries(d.caps||{}).filter(([k,c])=>c&&(typeof c.value==="number"||typeof c.value==="boolean")&&!/^(onoff|measure_battery)$/.test(k)&&!(k.startsWith("alarm_")&&!c.value)).slice(0,10);
     const hv=d.batt!=null?`${d.batt} %`:d.w!=null?`${fmtW(d.w)} W`:"";
     return`<div class="sc${caps.length>4?" span2":""}"><div class="dh"><span class="ico">${devImg(d,d.t==="battery"?"batt":"solar",40)}</span><b>${esc(d.n)}</b><span class="hv">${hv}</span></div>${d.warn?`<div class="ksub" style="color:var(--red)">${esc(d.warn)}</div>`:""}

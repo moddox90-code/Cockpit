@@ -289,6 +289,40 @@ html.hub .panel{display:block;padding:3vh 3vw}
 .hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
 .hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
 .hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
+/* Hub v4.0 */
+.hubgrid{grid-template-columns:1.05fr 1fr 1.2fr;grid-template-rows:1fr 1fr auto}
+.hleft{grid-row:1 / span 3}
+.htime{font-size:15vh;white-space:nowrap}
+.hwx{flex-wrap:nowrap}.hwx b{white-space:nowrap}
+.hwx b{font-size:8vh}
+.hwx span{font-size:3vh}
+.hsun{display:grid;grid-template-columns:1fr 1fr;gap:1vw}
+.hsun div{display:flex;align-items:center;gap:1vw;background:rgba(255,181,71,.10);border-radius:1.8vh;padding:1.2vh 1vw}
+.hsun i{font-style:normal;color:#ffb547;display:flex}
+.hsun small{display:block;color:var(--muted);font-size:2.2vh;font-weight:600}
+.hsun b{font-size:3.6vh;font-weight:500}
+.hs{display:flex;flex-wrap:wrap;column-gap:.9vw;row-gap:.3vh}
+.hs span{white-space:nowrap}
+.hs{gap:.8vh .6vw}.hs span{background:rgba(255,255,255,.07);border-radius:1vh;padding:.3vh .7vw}
+.hsol{grid-column:3;grid-row:1 / span 2}
+.hsol .hb{margin-top:1vh;font-size:11vh}
+.hbars{flex:1;min-height:6vh;display:flex;align-items:flex-end;gap:.35vw;margin:1.6vh 0 .4vh}
+.hbars i{flex:1;background:#ffb547;border-radius:.5vh .5vh 0 0;min-height:2px;opacity:.85}
+.hbars i.now{background:#ffd27a;opacity:1}
+.hbl{display:flex;justify-content:space-between;color:var(--muted);font-size:2vh;font-weight:600}
+.hrows{display:flex;flex-direction:column;gap:.9vh;margin-top:1.6vh}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:1vw;font-size:2.8vh;font-weight:600}
+.hrow span{color:var(--muted);display:flex;align-items:center;gap:.6vw}
+.hrow b{font-weight:600;white-space:nowrap}
+.hbatt{height:1.2vh;border-radius:1vh;background:rgba(255,255,255,.08);overflow:hidden}
+.hbatt i{display:block;height:100%;background:var(--green)}
+.hfoot{grid-column:2 / span 2;background:#141a28;border-radius:2.4vh;padding:1.6vh 2vw;display:flex;align-items:center;gap:1vw;font-size:2.6vh;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hfoot.warn{background:linear-gradient(90deg,rgba(255,92,92,.18),#141a28 70%)}
+.hfoot .ico{color:var(--acc);display:flex;flex:none}
+.hfoot{flex-wrap:wrap;row-gap:.8vh;column-gap:2vw;white-space:normal;background:linear-gradient(90deg,rgba(157,139,255,.16),#141a28 70%)}
+.hev{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hev b{color:#c3b8ff;font-weight:700;margin-right:.4vw}
+.hev em{font-style:normal;color:var(--muted);font-size:.85em}
 </style>
 
 </head>
@@ -324,6 +358,7 @@ rain:'<path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7zM8 19l-1 
 moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
 away:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',
 film:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>',
+cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
 alert:'<path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
 batt:'<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>',
 drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
@@ -618,7 +653,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.9</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.0</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -714,16 +749,38 @@ function hubHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
   const pv=pvNow(),g=gridNow(),B=batteryInfo(),al=alerts(),L=lamps().filter(d=>d.on).length,P=plugs().filter(d=>d.on).length;
   const hours=(w?w.hours:[]).slice(0,5).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span>${ic(hi,26,1.8)}<b>${Math.round(x.t)}°</b></div>`}).join("");
-  const tile=(acc,icon,lab,big,unit,sub)=>`<div class="ht" style="--acc:${acc}"><div class="hl">${ic(icon,22,2)}<span>${lab}</span></div><div class="hb">${big}<small>${unit}</small></div><div class="hs">${sub}</div></div>`;
+  const sub=a=>`<div class="hs">${a.filter(Boolean).map(x=>`<span>${x}</span>`).join("")}</div>`;
+  const tile=(acc,icon,lab,big,unit,parts)=>`<div class="ht" style="--acc:${acc}"><div class="hl">${ic(icon,22,2)}<span>${lab}</span></div><div class="hb">${big}<small>${unit}</small></div>${sub(parts)}</div>`;
+  const hum=humOf(S.devices),hc=houseCap(),houseW=hc?Math.max(0,hc.v):null;
+  // Solar: Stundenbalken 6–20 Uhr
+  const hist=(S.solarHist||[]).slice(6,21),mxH=Math.max(1,...hist),hNow=n.getHours();
+  const bars=hist.map((v,i)=>`<i class="${i+6===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("");
+  const batt=B.main?B.main.batt:null,bw=B.pw;
+  const battTxt=batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:"");
+  const row=(icon,lab,val,col)=>`<div class="hrow"><span>${ic(icon,18,2)}${lab}</span><b${col?` style="color:${col}"`:""}>${val}</b></div>`;
+  const solar=`<div class="ht hsol" style="--acc:#ffb547"><div class="hl">${ic("sun",22,2)}<span>Solar</span></div>
+    <div class="hb">${pv}<small>W</small><small style="margin-left:1vw">jetzt</small></div>
+    <div class="hbars">${bars}</div><div class="hbl"><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>20 Uhr</span></div>
+    <div class="hrows">
+     ${row("sun","Ertrag heute",T.ready?fE(T.sol):"…","#ffb547")}
+     ${row("batt","Akku",battTxt,batt!=null&&batt<15?"var(--red)":"var(--green)")}
+     ${batt!=null?`<div class="hbatt"><i style="width:${batt}%;${batt<15?"background:var(--red)":""}"></i></div>`:""}
+     ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
+     ${row("bolt",g!=null&&g<0?"Einspeisung":"Netzbezug",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
+    </div></div>`;
+  const C=S.cal||(S.mode==="demo"?{ok:true,today:[{t:"Zahnarzt",w:"16:30–17:15"},{t:"Training",w:"19:00–20:30"}],tomorrow:[{t:"Müll: Gelber Sack",w:"ganztägig"}]}:null),ev=(e,d)=>`<span class="hev"><b>${esc(e.w)}</b> ${esc(e.t)}${d?` <em>${d}</em>`:""}</span>`;
+  const evs=C&&C.ok?[...C.today.map(e=>ev(e,"")),...C.tomorrow.map(e=>ev(e,"morgen"))]:[];
+  const foot=`<div class="hfoot" style="--acc:#9d8bff"><span class="ico">${ic("cal",20,2)}</span>${
+    !C?"Termine werden geladen …":!C.ok?"Kalender nicht verbunden":evs.length?evs.slice(0,3).join(""):"Heute und morgen keine Termine"}</div>`;
   return`<div class="hubgrid">
    <div class="hleft"><div class="htime" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="hdate" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div>
-    <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}<br>${ic("rise",16,2)} ${w&&w.sunrise||"–"}  ${ic("set",16,2)} ${w&&w.sunset||"–"}</span></div>
+    <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}</span></div>
+    <div class="hsun"><div><i>${ic("rise",30,1.9)}</i><span><small>Aufgang</small><b>${w&&w.sunrise||"–"}</b></span></div><div><i>${ic("set",30,1.9)}</i><span><small>Untergang</small><b>${w&&w.sunset||"–"}</b></span></div></div>
     <div class="hhours">${hours}</div></div>
-   ${tile("var(--heat)","thermo","Heizung",fT(ist),"°",`${heiz?heiz+" heizt":"alle halten"} · Soll ${fT(soll)}° · innen ${humOf(S.devices)!=null?Math.round(humOf(S.devices))+" %":""}`)}
-   ${tile("#ffb547","sun","Solar",pv,"W",`heute ${T.ready?fE(T.sol):"…"} · Akku ${B.main?B.main.batt+" %":"–"}${B.pw?B.pw>0?" lädt":" entlädt":""}`)}
-   ${tile("var(--cool)","bolt",g!=null&&g<0?"Einspeisung":"Netz",g!=null?Math.abs(g):"–","W",`Haus heute ${T.ready?fE(T.use):"…"}`)}
-   ${al.length?`<div class="ht" style="--acc:var(--red)"><div class="hl">${ic("alert",22,2)}<span>Hinweise</span></div><div class="hal">${al.slice(0,3).map(a=>`<div>${esc(a.d.n)} · ${esc(a.txt)}</div>`).join("")}</div></div>`
-     :tile("var(--light)","lamp","Licht & Steckdosen",L,"an",`${L} Lampen · ${P} Steckdosen eingeschaltet`)}
+   ${tile("var(--heat)","thermo","Heizung",fT(ist),"°",[heiz?heiz+" heizt":"alle halten",`Soll ${fT(soll)}°`,hum!=null?`Luft ${Math.round(hum)} %`:null])}
+   ${solar}
+   ${tile("var(--cool)","bolt",g!=null&&g<0?"Einspeisung":"Netz",g!=null?Math.abs(g):"–","W",[`Haus heute ${T.ready?fE(T.use):"…"}`])}
+   ${foot}
   </div>`;
 }
 function render(){
@@ -753,6 +810,15 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible"&&!S.modal)connect(true)},10000);
 setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
 setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible")loadDaily()},300000);
+/* Kalender (nur Hub): liest die Tags der Homey-App „IcalCalendar" */
+function parseCal(s){if(!s||typeof s!=="string")return[];const p=s.split("; "),out=[];for(let i=0;i+1<p.length;i+=2)out.push({t:p[i],w:p[i+1].replace(" bis ","–")});return out}
+async function loadCal(){if(!HUB||!cfg.addr||!cfg.key)return;
+  try{const all=await api("/api/manager/flowtoken/flowtoken/");const L=Object.entries(all||{}).map(([k,v])=>Object.assign({key:k},v)).filter(t=>/no\.runely\.calendar/.test(t.key+" "+(t.uri||"")));
+    const get=id=>{const t=L.find(t=>(t.key+":"+(t.id||"")).endsWith(id));return t?t.value:null};
+    S.cal={ok:L.length>0,today:parseCal(get("events_today_title_stamps")),tomorrow:parseCal(get("events_tomorrow_title_stamps"))}}
+  catch(e){S.cal={ok:false,err:e.message,today:[],tomorrow:[]}}
+  render()}
+if(HUB){setTimeout(loadCal,1500);setInterval(loadCal,300000)}
 
 /* ---------- Vollbild ---------- */
 const isStandalone=()=>matchMedia("(display-mode: fullscreen)").matches||matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
@@ -762,7 +828,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="3.9";
+const APP_VER="4.0";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

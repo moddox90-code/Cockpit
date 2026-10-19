@@ -12,7 +12,9 @@
 <link rel="manifest" href="wandpanel.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="panel-192.png">
 <link rel="apple-touch-icon" href="panel-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}.uleg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:.92em;color:var(--muted);font-weight:600}
+.uleg span{display:flex;align-items:center;gap:6px}.uleg i{width:11px;height:11px;border-radius:3px;display:inline-block}.uleg b{color:var(--fg)}
+</style>
 <title>Davids Wandpanel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -289,7 +291,7 @@ html.hub .panel{display:block;padding:3vh 3vw}
 .hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
 .hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
 .hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
-/* Hub v4.3 */
+/* Hub v4.4 */
 .hbars i.st{display:flex;flex-direction:column-reverse;background:none;opacity:1;overflow:hidden;border-radius:.4vh .4vh 0 0}
 .hbars i.st u{display:block;text-decoration:none}
 .hbars i.st.now{outline:1px solid rgba(255,255,255,.5)}
@@ -582,7 +584,7 @@ async function loadDaily(){
   GRID={};const hc=houseCap();const gm=gridMeters();const cd=ultraChg(ultraDev());
   S.hourly={};
   for(const [key,src] of [["chg",cd.c],["dis",cd.d]]){if(!src)continue;try{const v=await insightsToday(ultraDev().id,src.cap);const Hh=integrate(v);S.hourly[key]=Hh;GRID[key]=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
-  if(HUB){const gd=gridDev();if(gd&&gd.caps&&gd.caps.measure_power){try{S.hourly.grid=integrate(await insightsToday(gd.id,"measure_power"))}catch(e){}}}
+  {const gd=gridDev();if(gd&&gd.caps&&gd.caps.measure_power){try{S.hourly.grid=integrate(await insightsToday(gd.id,"measure_power"))}catch(e){}}}
   for(const key of ["imp","exp"]){const cap=gm[key];if(!cap)continue;try{const v=await insightsToday(gm.g.id,cap);const cur=gm.g.caps[cap]&&gm.g.caps[cap].value;if(v.length&&typeof cur==="number")GRID[key]=Math.max(0,cur-v[0].v);ok++}catch(e){err=e.message}}
   if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);const Hh=integrate(v);S.hourly.house=Hh;GRID.house=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
   S.daily=ok?"ok":"fail";S.dailyErr=err;applyDaily();render();
@@ -679,7 +681,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.3</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.4</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -689,7 +691,7 @@ const solarDevs=()=>S.devices.filter(isSolarDev);
 function capNum(d,re){let sum=null;Object.entries(d.caps||{}).forEach(([k,c])=>{if(c&&typeof c.value==="number"&&re.test(k+" "+(c.title||""))&&(!c.units||/W$/i.test(c.units)&&!/kW?h/i.test(c.units))){sum=(sum||0)+c.value}});return sum}
 function batAvg(){const b=solarDevs().map(d=>d.batt).filter(x=>x!=null);return b.length?Math.round(b.reduce((a,x)=>a+x,0)/b.length):null}
 function catSummary(k){
-  if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}°`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"alle halten"} · Soll ${fT(soll)}°`]}
+  if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}°`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"Heizung aus"} · Soll ${fT(soll)}°`]}
   if(k==="light"){const L=lamps(),n=L.filter(d=>d.on).length;return[n?`${n} von ${L.length} an`:"alle aus",L.filter(d=>d.on).map(d=>d.n).join(", ")||"Tippen zum Schalten"]}
   if(k==="plug"){const P=plugs(),n=P.filter(d=>d.on).length,w=P.filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);return[`${n} von ${P.length} an`,`zusammen ${fmtW(Math.round(w))} W`]}
   if(k==="air"){const A=airs(),pm=(A.find(d=>d.pm!=null)||{}).pm,dh=A.find(d=>/luftentfeucht/i.test(d.n)),h=dh?humOf(S.devices.filter(x=>x.z===dh.z)):humOf(S.devices);return[`${A.filter(d=>d.on).length} von ${A.length} an`,[pm!=null?`PM2,5 ${pm}`:null,h!=null?`Luftfeuchte ${Math.round(h)} %`:null].filter(Boolean).join(" · ")||"Luftreiniger & Entfeuchter"]}
@@ -713,6 +715,17 @@ function solarChart(){
    <path d="${line} L${x(23)} ${y(0)} L${x(0)} ${y(0)}Z" fill="rgba(255,181,71,.18)"/><path d="${line}" fill="none" stroke="#ffb547" stroke-width="2.2"/><circle cx="${x(now)}" cy="${y(H[now]||0)}" r="4.5" fill="#ffb547" stroke="#1c2027" stroke-width="2"/>
    ${[0,6,12,18,23].map(i=>`<text x="${x(i)}" y="${Hh-5}" text-anchor="middle">${i===23?"24":i}:00</text>`).join("")}</svg>`;
 }
+function useChart(){
+  const st=hourStacks();if(!st)return"";const W=600,Hh=170,l=36,b=22,t=6,now=new Date().getHours();
+  const max=Math.max(50,...st.map(x=>x.s+x.b+x.g)),top=Math.ceil(max/50)*50,bw=(W-l-6)/24,y=v=>(v/top)*(Hh-b-t);
+  let bars="";st.forEach((x,i)=>{if(i>now)return;let base=Hh-b;const X=l+i*bw+bw*.15,w=bw*.7;
+    for(const [v,c] of [[x.s,"#ffd84a"],[x.b,"#7fe04e"],[x.g,"#6fd6ef"]]){if(v<=0)continue;const h=y(v);base-=h;bars+=`<rect x="${X.toFixed(1)}" y="${base.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${c}"/>`}
+    if(i===now)bars+=`<rect x="${(X-1).toFixed(1)}" y="${(base-1).toFixed(1)}" width="${(w+2).toFixed(1)}" height="${(Hh-b-base+1).toFixed(1)}" fill="none" stroke="rgba(255,255,255,.6)"/>`});
+  const tot=k=>st.reduce((a,x)=>a+x[k],0),all=Math.max(.001,tot("s")+tot("b")+tot("g")),pc=k=>Math.round(tot(k)/all*100),wh=k=>fE(tot(k)/1000);
+  return`<svg class="schart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Verbrauch heute nach Quelle">${[0,.5,1].map(f=>`<line x1="${l}" x2="${W}" y1="${Hh-b-y(top*f)}" y2="${Hh-b-y(top*f)}" stroke="#2c323c"/><text x="${l-6}" y="${Hh-b-y(top*f)+4}" text-anchor="end">${Math.round(top*f)}</text>`).join("")}${bars}
+   ${[0,6,12,18,24].map(i=>`<text x="${l+i*bw}" y="${Hh-5}" text-anchor="${i===24?"end":i===0?"start":"middle"}">${i}:00</text>`).join("")}</svg>
+   <div class="uleg"><span><i style="background:#ffd84a"></i>Solar <b>${pc("s")} %</b> · ${wh("s")}</span><span><i style="background:#7fe04e"></i>Akku <b>${pc("b")} %</b> · ${wh("b")}</span><span><i style="background:#6fd6ef"></i>Netz <b>${pc("g")} %</b> · ${wh("g")}</span></div>`;
+}
 function solarHTML(){
   const T=dayTotals(),pv=pvNow(),g=gridNow(),B=batteryInfo(),gc0=gridCheck(),devs=ultraDev()?[ultraDev()].concat(gc0.src=="meter"&&gridDev()?[gridDev()]:[]):solarDevs();
   const hcNow=houseCap(),house=hcNow?Math.max(0,hcNow.v):null;
@@ -726,6 +739,7 @@ function solarHTML(){
       return`<div class="sc"><span class="lab">${c.v<0?"Einspeisung jetzt":"Vom Netz jetzt"}</span><div class="kv" style="color:var(--cool)">${Math.abs(c.v)}<small>W</small></div><div class="ksub">${src}${T.imp!=null?` · heute ${iv} ${iu} bezogen${T.exp?`, ${xv} ${xu} eingespeist`:""}`:""}</div>${chk}</div>`})()
    +`<div class="sc"><span class="lab">Speicher</span><div class="kv" style="color:${B.main&&B.main.batt<15?"var(--red)":"var(--green)"}">${B.main?B.main.batt:"–"}<small>%</small></div><div class="bat"><i style="width:${B.main?B.main.batt:0}%;background:${B.main&&B.main.batt<15?"var(--red)":"var(--green)"}"></i></div><div class="ksub">${B.pw!=null?(B.pw>0?`lädt mit ${B.pw} W`:B.pw<0?`entlädt ${-B.pw} W`:"Ruhe"):""}${GRID.chg!=null?` · heute +${fE(GRID.chg)} / −${fE(GRID.dis||0)}`:""}${B.list.length>1?" · "+B.list.filter(d=>d!==B.main).map(d=>esc(d.n)+" "+d.batt+" %").join(" · "):""}</div></div>`
    +(T.house!=null?kpi("Hausverbrauch heute",hv,hu,hcNow?`jetzt ${house} W`:"aus Zähler + Solar","var(--fg)"):"")
+   +(()=>{const u=useChart();return u?`<div class="sc span2"><span class="lab">Verbrauch heute nach Quelle</span>${u}</div>`:""})()
    +`<div class="sc span2"><span class="lab">Solarleistung heute · Quelle ${esc(ultraDev()?ultraDev().n:"EcoFlow")}</span>${solarChart()}</div>`;
   h+=devs.map(d=>{const caps=Object.entries(d.caps||{}).filter(([k,c])=>c&&(typeof c.value==="number"||typeof c.value==="boolean")&&!/^(onoff|measure_battery)$/.test(k)&&!(k.startsWith("alarm_")&&!c.value)).slice(0,10);
     const hv=d.batt!=null?`${d.batt} %`:d.w!=null?`${fmtW(d.w)} W`:"";
@@ -735,7 +749,7 @@ function solarHTML(){
 }
 function heatTile(d){
   const on=d.temp!=null&&d.cur!=null&&d.temp>d.cur;
-  return`<div class="heat${on?" on":""}"><span class="room"><span class="hico">${devImg(d,"radiator",30)}</span>${esc(shortZone(d.z))}</span><span class="state">${on?"heizt":"hält"}</span>
+  return`<div class="heat${on?" on":""}"><span class="room"><span class="hico">${devImg(d,"radiator",30)}</span>${esc(shortZone(d.z))}</span><span class="state">${on?"heizt":"aus"}</span>
    <div class="target"><b>${fT(d.temp)}°</b><span>Ist ${fT(d.cur)}°</span>${d.batt!=null&&d.batt<=40?`<span class="low">Batterie ${d.batt} %</span>`:""}</div>
    <div class="ctl"><button data-temp="${d.id}" data-d="-0.5" aria-label="${esc(d.n)} kälter">${ic("minus",26,2.4)}</button><button data-temp="${d.id}" data-d="0.5" aria-label="${esc(d.n)} wärmer">${ic("plus",26,2.4)}</button></div></div>`;
 }
@@ -869,7 +883,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.3";
+const APP_VER="4.4";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

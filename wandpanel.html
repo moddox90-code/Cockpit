@@ -243,10 +243,11 @@ loadDemo();
 function baseUrl(a){a=(a||"").trim().replace(/\/+$/,"");if(!a)return"";if(/^https?:\/\//.test(a))return a;
   if(/^\d+\.\d+\.\d+\.\d+$/.test(a))return`https://${a.replace(/\./g,"-")}.homey.homeylocal.com`;return"https://"+a}
 async function api(path,opt={}){
-  const r=await fetch(baseUrl(cfg.addr)+path,{...opt,headers:{"Authorization":"Bearer "+cfg.key,"Content-Type":"application/json"}});
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),opt.timeout||12000);
+  const r=await fetch(baseUrl(cfg.addr)+path,{...opt,signal:ac.signal,headers:{"Authorization":"Bearer "+cfg.key,"Content-Type":"application/json"}});
   if(r.status===401||r.status===403)throw new Error("API-Schlüssel abgelehnt (fehlende Rechte?)");
   if(!r.ok)throw new Error("Homey antwortet mit Fehler "+r.status);
-  const t=await r.text();return t?JSON.parse(t):null;
+  clearTimeout(tm);const t=await r.text();return t?JSON.parse(t):null;
 }
 /* Anzeigenamen: Homey-Name -> Name in der App */
 const RENAME={}; /* leer: die App zeigt die Namen aus Homey */
@@ -257,8 +258,9 @@ function mapDevice(d,zones){
   const info=[d.name,d.driverId,d.driverUri,d.ownerUri,d.class].join(" ");
   let t=CLS[d.virtualClass||d.class]||"router";
   if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
-  if(t==="router"&&d.capabilitiesObj&&d.capabilitiesObj.onoff)t="socket";
-  const o={id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
+  const cc=d.capabilitiesObj||{};
+  if(cc.onoff&&(t==="router"||t==="sensor"||t==="button"||(/^EF[ -]|eco ?flow/i.test(d.name||"")&&t!=="battery"&&!/solar|stream/i.test(d.name||""))))t="socket";
+  const o={raw:{cls:d.class,vcls:d.virtualClass,drv:d.driverId||d.driverUri||"",caps:Object.keys(cc)},id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
   if(v("onoff")!==undefined)o.on=!!v("onoff");
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
   if(v("target_temperature")!=null)o.temp=v("target_temperature");
@@ -370,6 +372,8 @@ function settingsModal(){
    <label class="trow" for="f-wake"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></label>
    <label class="trow" for="f-autofull"><span>Bei Berührung Vollbild (ohne Browserleiste)</span><input type="checkbox" id="f-autofull" ${store.get("autofull",true)?"checked":""}></label>
    <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
+   <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""}</div></div></details>
+   <p style="font-size:12px">Version 2.4</p>
    <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
@@ -398,7 +402,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    ${al.length?`<div class="blk wbox"><span class="lab">Hinweise</span><div class="warns">${al.slice(0,2).map(a=>`<div>${ic(a.kind==="r"?"alert":"batt",15)}<span>${esc(a.d.n)}: ${esc(a.txt)}</span></div>`).join("")}${al.length>2?`<div><span>+ ${al.length-2} weitere</span></div>`:""}</div></div>`:""}
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"}</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v2.4</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Einstellungen"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;
 }

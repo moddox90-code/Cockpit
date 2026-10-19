@@ -268,6 +268,27 @@ body::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none
 .dlg{background:rgba(20,25,38,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--edge)}
 .scrim{background:rgba(3,5,10,.55)}
 @supports not (backdrop-filter:blur(1px)){.rail,.cat,.sw,.heat,.sc,.seg{background-color:#1a2030}}
+
+/* ===== Hub-Ansicht (Nest Hub per Cast, nur Anzeige) ===== */
+html.hub .rail,html.hub .cat,html.hub .sw,html.hub .heat,html.hub .sc,html.hub .seg{backdrop-filter:none;-webkit-backdrop-filter:none}
+html.hub body::before{display:none}
+html.hub .panel{display:block;padding:3vh 3vw}
+.hubgrid{height:100%;display:grid;grid-template-columns:1.15fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2.4vh}
+.hleft{grid-row:span 2;background:#141a28;border-radius:3vh;padding:3vh 3vw;display:flex;flex-direction:column;gap:2vh;min-width:0}
+.htime{font-size:20vh;font-weight:300;letter-spacing:-.05em;line-height:.9}
+.hdate{color:var(--muted);font-weight:600;font-size:3.6vh}
+.hwx{display:flex;align-items:center;gap:2vw;margin-top:1vh}
+.hwx b{font-size:9vh;font-weight:300}
+.hwx span{color:var(--muted);font-size:2.8vh;line-height:1.4}
+.hhours{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:1vw;text-align:center}
+.hhours div{display:flex;flex-direction:column;align-items:center;gap:.6vh;background:rgba(255,255,255,.05);border-radius:1.6vh;padding:1.2vh 0;font-size:2.6vh}
+.hhours span{color:var(--muted)}
+.ht{background:linear-gradient(150deg,color-mix(in srgb,var(--acc) 20%,#141a28),#141a28 65%);background-color:#141a28;border-radius:3vh;padding:2.6vh 2vw;display:flex;flex-direction:column;min-width:0}
+.hl{display:flex;align-items:center;gap:.8vw;color:var(--acc);font-weight:700;font-size:3vh;text-transform:uppercase;letter-spacing:.08em}
+.hb{margin-top:auto;font-size:12vh;font-weight:300;letter-spacing:-.04em;line-height:1}
+.hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
+.hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
+.hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
 </style>
 
 </head>
@@ -349,6 +370,8 @@ const SOLAR_DEMO=[0,0,0,0,0,0,0,0,40,180,420,610,700,560,480,300,120,20,0,0,0,0,
 
 const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("dz_"+k,JSON.stringify(v))}catch(e){}}};
 let cfg=store.get("cfg",{addr:"",key:"",city:""});
+const HP=new URLSearchParams((location.hash||"").replace(/^#/,""));const HUB=HP.has("hub");
+if(HUB){cfg={addr:HP.get("addr")||cfg.addr,key:HP.get("key")||cfg.key,city:HP.get("city")||cfg.city||"Stockach"};document.documentElement.classList.add("hub")}
 let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),histLive:false,view:"home",spk:null,vol:35,night:false,modal:null};
 const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
 const DEMO_KWH={"Strom Fernseher":.706,"FB Steckdose Ecovacs":.437,"FB Steckdose":.131,"Repeater":.088,"EF Luftentfeuchter":.081,"EF Flur":.064,"Luftentfeuchter":.041,"EF Spülmaschine":.021,"EF Waschmaschine":.019,"STREAM Solar System":3.5};
@@ -555,7 +578,7 @@ function settingsModal(){
    <label class="trow" for="f-autofull"><span>Bei Berührung Vollbild (ohne Browserleiste)</span><input type="checkbox" id="f-autofull" ${store.get("autofull",true)?"checked":""}></label>
    <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
    <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""} · Verlauf-Logs: ${LOGIX?Object.keys(LOGIX).length:"?"} · Modus: ${INS_MODE||"–"} · Solar-Quelle: ${esc(S.pvSrc||"–")} · Haus/Akku heute: Ultra-Haus ${GRID.house!=null?fE(GRID.house):"–"} · Bezug ${GRID.imp!=null?fE(GRID.imp):"–"} · geladen ${GRID.chg!=null?fE(GRID.chg):"–"} · entladen ${GRID.dis!=null?fE(GRID.dis):"–"} · PV ${S.pvWh!=null?Math.round(S.pvWh)+" Wh":"–"} · Netz-Abgleich: ${(()=>{const c=gridCheck();return c.src?`${c.src} (Ultra ${c.u??"–"} W / Zähler ${c.m??"–"} W)`:"–"})()}</div><div>${esc(INS_TRIED.join(" | "))}</div><div>Log-Beispiele: ${esc(LOGSAMPLE||"–")}</div></div></details>
-   <p style="font-size:12px">Version 3.8</p>
+   <p style="font-size:12px">Version 3.9</p>
    <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
@@ -595,7 +618,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.8</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.9</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -687,7 +710,24 @@ function areaHTML(){
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
   return list.map(d=>swTile(d,TAB)).join("")||'<div class="sub">Keine Geräte gefunden.</div>';
 }
+function hubHTML(){
+  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
+  const pv=pvNow(),g=gridNow(),B=batteryInfo(),al=alerts(),L=lamps().filter(d=>d.on).length,P=plugs().filter(d=>d.on).length;
+  const hours=(w?w.hours:[]).slice(0,5).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span>${ic(hi,26,1.8)}<b>${Math.round(x.t)}°</b></div>`}).join("");
+  const tile=(acc,icon,lab,big,unit,sub)=>`<div class="ht" style="--acc:${acc}"><div class="hl">${ic(icon,22,2)}<span>${lab}</span></div><div class="hb">${big}<small>${unit}</small></div><div class="hs">${sub}</div></div>`;
+  return`<div class="hubgrid">
+   <div class="hleft"><div class="htime" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="hdate" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div>
+    <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}<br>${ic("rise",16,2)} ${w&&w.sunrise||"–"}  ${ic("set",16,2)} ${w&&w.sunset||"–"}</span></div>
+    <div class="hhours">${hours}</div></div>
+   ${tile("var(--heat)","thermo","Heizung",fT(ist),"°",`${heiz?heiz+" heizt":"alle halten"} · Soll ${fT(soll)}° · innen ${humOf(S.devices)!=null?Math.round(humOf(S.devices))+" %":""}`)}
+   ${tile("#ffb547","sun","Solar",pv,"W",`heute ${T.ready?fE(T.sol):"…"} · Akku ${B.main?B.main.batt+" %":"–"}${B.pw?B.pw>0?" lädt":" entlädt":""}`)}
+   ${tile("var(--cool)","bolt",g!=null&&g<0?"Einspeisung":"Netz",g!=null?Math.abs(g):"–","W",`Haus heute ${T.ready?fE(T.use):"…"}`)}
+   ${al.length?`<div class="ht" style="--acc:var(--red)"><div class="hl">${ic("alert",22,2)}<span>Hinweise</span></div><div class="hal">${al.slice(0,3).map(a=>`<div>${esc(a.d.n)} · ${esc(a.txt)}</div>`).join("")}</div></div>`
+     :tile("var(--light)","lamp","Licht & Steckdosen",L,"an",`${L} Lampen · ${P} Steckdosen eingeschaltet`)}
+  </div>`;
+}
 function render(){
+  if(HUB){document.querySelector(".panel").innerHTML=hubHTML();return}
   $("#rail").innerHTML=railHTML();$("#seg").innerHTML=segHTML();$("#area").innerHTML=areaHTML();
   $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
 }
@@ -722,8 +762,8 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="3.8";
-function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1])}}).catch(()=>{})}
+const APP_VER="3.9";
+function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();
 if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();

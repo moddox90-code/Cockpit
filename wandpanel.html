@@ -430,13 +430,13 @@ async function triggerFlow(name){
 let DAILY={};
 let LOGIX=null;
 let LOGSAMPLE="";
-async function logIndex(){if(LOGIX)return LOGIX;const all=await api("/api/manager/insights/log/");LOGIX={};try{LOGSAMPLE=Object.entries(all||{}).slice(0,2).map(([k,l])=>k+" → "+JSON.stringify({id:l.id,uri:l.uri,ownerUri:l.ownerUri,ownerId:l.ownerId})).join(" ; ")}catch(e){}Object.values(all||{}).forEach(l=>{if(!l)return;const ou=l.ownerUri||l.uri||"",oi=l.ownerId||l.id||"";const dev=(ou.match(/homey:device:([\w-]+)/)||[])[1]||(String(l.id||"").match(/homey:device:([\w-]+)/)||[])[1];const cap=l.ownerId&&l.ownerUri?l.ownerId:String(l.id||"").split(":").pop();if(dev)LOGIX[dev+"|"+cap]={uri:ou||("homey:device:"+dev),id:oi&&l.ownerUri?oi:cap}});return LOGIX}
+async function logIndex(){if(LOGIX)return LOGIX;const all=await api("/api/manager/insights/log/");LOGIX={};try{LOGSAMPLE=Object.entries(all||{}).slice(0,2).map(([k,l])=>k+" → "+JSON.stringify({id:l.id,uri:l.uri,ownerUri:l.ownerUri,ownerId:l.ownerId})).join(" ; ")}catch(e){}Object.values(all||{}).forEach(l=>{if(!l)return;const ou=l.ownerUri||l.uri||"",oi=l.ownerId||l.id||"";const dev=(ou.match(/homey:device:([\w-]+)/)||[])[1]||(String(l.id||"").match(/homey:device:([\w-]+)/)||[])[1];const cap=l.ownerId&&l.ownerUri?l.ownerId:String(l.id||"").split(":").pop();if(dev)LOGIX[dev+"|"+cap]={uri:ou||("homey:device:"+dev),id:oi&&l.ownerUri?oi:cap,full:String(l.id||"").includes(":")?l.id:(ou||("homey:device:"+dev))+":"+cap}});return LOGIX}
 let INS_MODE=null,INS_TRIED=[];
-async function insightsToday(id,cap){let uri="homey:device:"+id,lid=cap;try{const ix=await logIndex();const x=ix[id+"|"+cap];if(x){uri=x.uri;lid=x.id}}catch(e){}
-  const E=encodeURIComponent,full=uri+":"+lid,q="?resolution=today";
-  const forms=[["a",`/api/manager/insights/log/${E(uri)}/${E(lid)}/entry${q}`],["b",`/api/manager/insights/log/${uri}/${lid}/entry${q}`],["c",`/api/manager/insights/log/${E(full)}/entry${q}`],["d",`/api/manager/insights/log/${E(uri)}/${E(lid)}/entries${q}`]];
+async function insightsToday(id,cap){let uri="homey:device:"+id,full=uri+":"+cap;try{const ix=await logIndex();const x=ix[id+"|"+cap];if(x){uri=x.uri;full=x.full}}catch(e){}
+  const E=encodeURIComponent,mid=new Date();mid.setHours(0,0,0,0);
+  const forms=[["a",`/api/manager/insights/log/${uri}/${full}/entry?resolution=today`,false],["b",`/api/manager/insights/log/${E(uri)}/${E(full)}/entry?resolution=today`,false],["c",`/api/manager/insights/log/${uri}/${full}/entry?resolution=last24Hours`,true],["d",`/api/manager/insights/log/${uri}/${full}/entry`,true]];
   const order=INS_MODE?forms.filter(f=>f[0]===INS_MODE):forms;let last;
-  for(const [m,path] of order){try{const r=await api(path);INS_MODE=m;const vals=(r&&(r.values||r.entries))||(Array.isArray(r)?r:[]);return vals.filter(x=>x&&x.v!=null)}catch(e){last=e;if(INS_TRIED.length<6)INS_TRIED.push(m+": "+e.message)}}
+  for(const [m,path,cut] of order){try{const r=await api(path);INS_MODE=m;let vals=((r&&(r.values||r.entries))||(Array.isArray(r)?r:[])).filter(x=>x&&x.v!=null);if(cut)vals=vals.filter(x=>new Date(x.t)>=mid);return vals}catch(e){last=e;if(INS_TRIED.length<8&&!INS_TRIED.some(t=>t.startsWith(m+":")))INS_TRIED.push(m+": "+e.message)}}
   throw last;
 }
 function applyDaily(){S.devices.forEach(d=>{const x=DAILY[d.id];if(x&&x.first!=null){const cur=d.caps&&d.caps[d.meter]&&d.caps[d.meter].value;d.kwh=Math.max(0,(cur!=null?cur:x.last)-x.first)}})}
@@ -498,7 +498,7 @@ function settingsModal(){
    <label class="trow" for="f-autofull"><span>Bei Berührung Vollbild (ohne Browserleiste)</span><input type="checkbox" id="f-autofull" ${store.get("autofull",true)?"checked":""}></label>
    <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
    <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""} · Verlauf-Logs: ${LOGIX?Object.keys(LOGIX).length:"?"} · Modus: ${INS_MODE||"–"}</div><div>${esc(INS_TRIED.join(" | "))}</div><div>Log-Beispiele: ${esc(LOGSAMPLE||"–")}</div></div></details>
-   <p style="font-size:12px">Version 3.1</p>
+   <p style="font-size:12px">Version 3.2</p>
    <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
@@ -538,7 +538,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.1</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.2</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }

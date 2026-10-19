@@ -257,6 +257,7 @@ function mapDevice(d,zones){
   const info=[d.name,d.driverId,d.driverUri,d.ownerUri,d.class].join(" ");
   let t=CLS[d.virtualClass||d.class]||"router";
   if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
+  if(t==="router"&&d.capabilitiesObj&&d.capabilitiesObj.onoff)t="socket";
   const o={id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
   if(v("onoff")!==undefined)o.on=!!v("onoff");
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
@@ -309,7 +310,10 @@ async function triggerFlow(name){
 
 /* Tageswerte aus dem Homey-Verlauf (Insights) */
 let DAILY={};
-async function insightsToday(id,cap){const r=await api(`/api/manager/insights/log/${encodeURIComponent("homey:device:"+id)}/${encodeURIComponent(cap)}/entry?resolution=today`);return((r&&r.values)||[]).filter(x=>x&&x.v!=null)}
+let LOGIX=null;
+async function logIndex(){if(LOGIX)return LOGIX;const all=await api("/api/manager/insights/log/");LOGIX={};Object.values(all||{}).forEach(l=>{if(!l)return;const ou=l.ownerUri||l.uri||"",oi=l.ownerId||l.id||"";const dev=(ou.match(/homey:device:([\w-]+)/)||[])[1]||(String(l.id||"").match(/homey:device:([\w-]+)/)||[])[1];const cap=l.ownerId&&l.ownerUri?l.ownerId:String(l.id||"").split(":").pop();if(dev)LOGIX[dev+"|"+cap]={uri:ou||("homey:device:"+dev),id:oi&&l.ownerUri?oi:cap}});return LOGIX}
+async function insightsToday(id,cap){let uri="homey:device:"+id,lid=cap;try{const ix=await logIndex();const x=ix[id+"|"+cap];if(x){uri=x.uri;lid=x.id}}catch(e){}
+  const r=await api(`/api/manager/insights/log/${encodeURIComponent(uri)}/${encodeURIComponent(lid)}/entry?resolution=today`);return((r&&r.values)||[]).filter(x=>x&&x.v!=null)}
 function applyDaily(){S.devices.forEach(d=>{const x=DAILY[d.id];if(x&&x.first!=null){const cur=d.caps&&d.caps[d.meter]&&d.caps[d.meter].value;d.kwh=Math.max(0,(cur!=null?cur:x.last)-x.first)}})}
 async function loadDaily(){
   if(S.mode!=="live")return;S.dailyAt=Date.now();
@@ -359,7 +363,7 @@ function settingsModal(){
   return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
    <h3 id="st">Verbindung & Panel</h3>
    <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz.</p>
-   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg ok">Verbunden · ${S.devices.length} Geräte</div>`:""}
+   ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg ok">Verbunden · ${S.devices.length} Geräte</div>`:""}${S.mode==="live"&&S.daily==="fail"?`<div class="msg err">Energie-Tageswerte: ${esc(S.dailyErr||"keine Daten")}. Prüfe beim API-Schlüssel das Recht „Insights“.</div>`:""}
    <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"></div>
    <div class="fld"><label for="f-key">API-Schlüssel</label><input id="f-key" type="password" autocomplete="off" placeholder="Schlüssel einfügen" value="${esc(cfg.key)}"><small>Wird nur auf diesem Gerät gespeichert.</small></div>
    <div class="fld"><label for="f-city">Ort fürs Wetter</label><input id="f-city" autocomplete="off" placeholder="z. B. Stockach" value="${esc(cfg.city)}"></div>
@@ -391,8 +395,8 @@ function railHTML(){
    <div class="wx"><span style="color:${wi==="sun"?"var(--light)":"var(--muted)"}">${ic(wi,44,1.7)}</span><div><b>${w?Math.round(w.t):14}°</b><div class="sub">${esc(w?w.place:"Beispiel")} · ${wt}</div></div></div>
    <div class="blk"><span class="lab">Innen</span><div class="inside">${t!=null?`<span>${ic("thermo",20)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",20)}${Math.round(h)} %</span>`:""}</div></div>
    <div class="blk"><span class="lab">Energie heute</span>
-    <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):"…"}</b></div>
-    <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):"…"}</b></div></div>
+    <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
+    <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    ${al.length?`<div class="blk wbox"><span class="lab">Hinweise</span><div class="warns">${al.slice(0,2).map(a=>`<div>${ic(a.kind==="r"?"alert":"batt",15)}<span>${esc(a.d.n)}: ${esc(a.txt)}</span></div>`).join("")}${al.length>2?`<div><span>+ ${al.length-2} weitere</span></div>`:""}</div></div>`:""}
    <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"}</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>

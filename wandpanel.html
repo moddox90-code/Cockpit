@@ -289,7 +289,15 @@ html.hub .panel{display:block;padding:3vh 3vw}
 .hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
 .hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
 .hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
-/* Hub v4.1 */
+/* Hub v4.2 */
+.hbars i.st{display:flex;flex-direction:column-reverse;background:none;opacity:1;overflow:hidden;border-radius:.4vh .4vh 0 0}
+.hbars i.st u{display:block;text-decoration:none}
+.hbars i.st.now{outline:1px solid rgba(255,255,255,.5)}
+.hbars i.fut{height:2px;background:rgba(255,255,255,.08)}
+.hbars{gap:.2vw}
+.hleg{display:flex;gap:1.2vw;margin-top:.8vh;font-size:2.1vh;font-weight:600;color:var(--muted)}
+.hleg span{display:flex;align-items:center;gap:.4vw;white-space:nowrap}.hleg i{width:1.4vh;height:1.4vh;border-radius:.4vh;display:inline-block}
+
 html.hub .hhours{margin-top:0}
 .hsec{margin-top:auto;color:var(--muted);font-size:2.1vh;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .hsec+.hhours+.hsec{margin-top:0}
@@ -572,9 +580,11 @@ async function loadDaily(){
   if(pvMeter){try{const v=await insightsToday(u.id,pvMeter[0]);const cur=pvMeter[1].value;if(v.length)S.pvWhMeter=Math.max(0,(cur-v[0].v)*1000)}catch(e){}}
   if(src){try{const v=await insightsToday(src.d.id,src.cap);const H=integrate(v);S.solarHist=H.map(x=>Math.round(x));S.pvWh=H.reduce((a,b)=>a+b,0);ok++}catch(e){err=e.message}}
   GRID={};const hc=houseCap();const gm=gridMeters();const cd=ultraChg(ultraDev());
-  for(const [key,src] of [["chg",cd.c],["dis",cd.d]]){if(!src)continue;try{const v=await insightsToday(ultraDev().id,src.cap);GRID[key]=integrate(v).reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
+  S.hourly={};
+  for(const [key,src] of [["chg",cd.c],["dis",cd.d]]){if(!src)continue;try{const v=await insightsToday(ultraDev().id,src.cap);const Hh=integrate(v);S.hourly[key]=Hh;GRID[key]=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
+  if(HUB){const gd=gridDev();if(gd&&gd.caps&&gd.caps.measure_power){try{S.hourly.grid=integrate(await insightsToday(gd.id,"measure_power"))}catch(e){}}}
   for(const key of ["imp","exp"]){const cap=gm[key];if(!cap)continue;try{const v=await insightsToday(gm.g.id,cap);const cur=gm.g.caps[cap]&&gm.g.caps[cap].value;if(v.length&&typeof cur==="number")GRID[key]=Math.max(0,cur-v[0].v);ok++}catch(e){err=e.message}}
-  if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);GRID.house=integrate(v).reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
+  if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);const Hh=integrate(v);S.hourly.house=Hh;GRID.house=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
   S.daily=ok?"ok":"fail";S.dailyErr=err;applyDaily();render();
 }
 const fE=k=>k==null?"–":k<1?`${Math.round(k*1000)} Wh`:`${k.toFixed(2).replace(".",",")} kWh`;
@@ -669,7 +679,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.1</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.2</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -761,6 +771,13 @@ function areaHTML(){
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
   return list.map(d=>swTile(d,TAB)).join("")||'<div class="sub">Keine Geräte gefunden.</div>';
 }
+function hourStacks(){const h=S.hourly||{};let H=h.house,G=h.grid,D=h.dis,C=h.chg,P=S.solarHist;
+  if(S.mode==="demo"){P=S.solarHist;H=Array.from({length:24},(_,i)=>i<5?110:i<9?120:i<17?115:150);D=H.map((v,i)=>i>=17&&i<22?120:0);C=P.map((v,i)=>i>=11&&i<16?Math.max(0,v-115):0);G=null}
+  if(!H)return null;const out=[];
+  for(let i=0;i<24;i++){const hv=Math.max(0,H[i]||0),bat=Math.min(hv,D?D[i]||0:0);
+    let g=G?Math.min(hv-bat,Math.max(0,G[i]||0)):Math.max(0,hv-bat-Math.max(0,(P?P[i]||0:0)-(C?C[i]||0:0)));g=Math.max(0,g);
+    out.push({s:Math.max(0,hv-bat-g),b:bat,g})}
+  return out}
 function hubHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
   const pv=pvNow(),g=gridNow(),B=batteryInfo(),hum=humOf(S.devices),hc=houseCap(),houseW=hc?Math.max(0,hc.v):null;
@@ -777,8 +794,12 @@ function hubHTML(){
   // Energie heute
   const sol=T.ready?T.sol:null,use=T.ready?T.use:null,mx=Math.max(sol||0,use||0,.001);
   const [sv,su]=eParts(sol),[uv,uu]=eParts(use);
-  const hist=(S.solarHist||[]).slice(6,21),mxH=Math.max(1,...hist),hNow=n.getHours();
-  const bars=hist.map((v,i)=>`<i class="${i+6===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("");
+  const hNow=n.getHours(),stk=hourStacks();let bars,legend="";
+  if(stk){const mxH=Math.max(1,...stk.map(x=>x.s+x.b+x.g));
+    bars=stk.map((x,i)=>i>hNow?`<i class="st fut"></i>`:`<i class="st${i===hNow?" now":""}" style="height:${Math.max(1.5,(x.s+x.b+x.g)/mxH*100)}%">${x.s?`<u style="flex:${x.s};background:#ffd84a"></u>`:""}${x.b?`<u style="flex:${x.b};background:#7fe04e"></u>`:""}${x.g?`<u style="flex:${x.g};background:#6fd6ef"></u>`:""}</i>`).join("");
+    const tot=k=>stk.reduce((a,x)=>a+x[k],0),all=Math.max(.001,tot("s")+tot("b")+tot("g")),pc=k=>Math.round(tot(k)/all*100);
+    legend=`<div class="hleg"><span><i style="background:#ffd84a"></i>Solar ${pc("s")} %</span><span><i style="background:#7fe04e"></i>Akku ${pc("b")} %</span><span><i style="background:#6fd6ef"></i>Netz ${pc("g")} %</span></div>`}
+  else{const hist=(S.solarHist||[]).slice(0,24),mxH=Math.max(1,...hist);bars=hist.map((v,i)=>`<i class="${i===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("")}
   const batt=B.main?B.main.batt:null,bw=B.pw;
   const row=(icon,lab,val,col)=>`<div class="hrow"><span>${ic(icon,18,2)}${lab}</span><b${col?` style="color:${col}"`:""}>${val}</b></div>`;
   const netTxt=T.imp!=null?`${fE(T.imp)} bezogen${T.exp?` · ${fE(T.exp)} eingespeist`:""}`:null;
@@ -793,7 +814,7 @@ function hubHTML(){
    <div class="hcard hen"><div class="hl">${ic("sun",22,2)}<span>Energie heute</span></div>
     <div class="hkpi"><div><small>Erzeugt</small><b style="color:#ffb547">${sv}<em>${su}</em></b></div><div><small>Verbraucht</small><b style="color:var(--cool)">${uv}<em>${uu}</em></b></div></div>
     <div class="hcmp"><div><i style="width:${(sol||0)/mx*100}%;background:#ffb547"></i></div><div><i style="width:${(use||0)/mx*100}%;background:var(--cool)"></i></div></div>
-    <div class="hbars">${bars}</div><div class="hbl"><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>20 Uhr</span></div>
+    <div class="hbars">${bars}</div><div class="hbl"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>${legend}
     <div class="hrows">
      ${row("sun","Solar jetzt",pv+" W","#ffb547")}
      ${row("batt","Akku",batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""),batt!=null&&batt<15?"var(--red)":"var(--green)")}
@@ -848,7 +869,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.1";
+const APP_VER="4.2";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

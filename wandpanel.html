@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wandpanel">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#07090f">
 <link rel="manifest" href="wandpanel.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="panel-192.png">
 <link rel="apple-touch-icon" href="panel-192.png">
@@ -15,7 +15,7 @@
 <title>Davids Wandpanel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap">
 <style>
 /* Layout: one-screen landscape wall panel — fixed info rail left (clock, weather, energy today), right a three-way switch (Heizung / Licht / Steckdosen) whose tiles fill the remaining height. Stacks on narrow portrait screens. Dark-only by choice. */
 :root{
@@ -61,17 +61,63 @@ button{cursor:pointer}
 .rbtn{width:42px;height:42px;border-radius:50%;border:0;background:var(--tile);display:grid;place-items:center;color:var(--fg)}
 .rbtn[aria-pressed="true"]{color:var(--light)}
 .foot .rbtn:first-of-type{margin-left:auto}
+.rbtn{position:relative}
+.rbtn .badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;line-height:1}
+.sun{display:flex;gap:18px;font-weight:700;margin-top:-4px}
+.sun span{display:inline-flex;align-items:center;gap:7px}
+.sun svg{color:var(--light)}
+.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center}
+.hours div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.hours span{color:var(--muted);font-size:.78em;font-weight:600}
+.hours i{display:grid;place-items:center}
+.hours b{font-weight:700;font-size:.95em}
+.hlist{display:flex;flex-direction:column;gap:6px}
+.hlist div{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:12px;padding:10px 12px}
+.hlist .r{color:var(--red)}.hlist .y{color:var(--light)}
+.hlist small{display:block;color:var(--muted)}
 
 /* main */
 .main{display:flex;flex-direction:column;gap:var(--gap);min-width:0;min-height:0}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--rail);border-radius:999px;padding:6px}
-.seg button{border:0;background:none;border-radius:999px;padding:clamp(8px,1.8vh,14px) 10px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);white-space:nowrap;min-width:0}
-.seg button{font-size:1.05em}
-.seg button small{font-weight:600;font-size:.78em;opacity:.8}
-.seg button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
-.seg button[aria-selected="true"][data-tab="heat"] svg{color:var(--heat)}
-.seg button[aria-selected="true"][data-tab="light"] svg{color:#d99a00}
-.seg button[aria-selected="true"][data-tab="plug"] svg{color:#12a888}
+/* detail header */
+.seg{display:flex;align-items:center;gap:12px;background:var(--rail);border-radius:999px;padding:6px 16px 6px 6px;min-width:0}
+.seg[hidden]{display:none!important}
+.back{border:0;background:var(--tile-2);border-radius:999px;height:clamp(40px,7vh,52px);padding:0 18px 0 12px;display:inline-flex;align-items:center;gap:8px;font-weight:700;flex:none}
+.seg h2{margin:0;font-size:1.25em;font-weight:800;display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap}
+.seg h2 svg{color:var(--acc)}
+.seg .info{margin-left:auto;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+/* home: category tiles */
+.area.home{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+.cat{grid-column:span 2;position:relative;border:0;border-radius:var(--r);background:var(--tile);padding:clamp(14px,2.6vh,24px);display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0;min-height:0;overflow:hidden;isolation:isolate;transition:transform .12s}
+.cat.wide{grid-column:span 3}
+.cat::after{content:"";position:absolute;right:-30%;top:-40%;width:80%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--acc) 0,transparent 65%);opacity:.16;z-index:-1}
+.cat .ci{width:clamp(44px,8vh,64px);height:clamp(44px,8vh,64px);border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.07);background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--acc)}
+.cat .ct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cat .go{color:var(--dim)}
+.cat h3{margin:0;font-size:clamp(20px,4.2vh,34px);font-weight:800;letter-spacing:-.02em}
+.cat .s1{font-size:clamp(15px,2.7vh,21px);font-weight:700;margin-top:4px}
+.cat .s2{color:var(--muted);font-weight:600;font-size:.92em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat:active{transform:scale(.98)}
+/* solar page */
+.area.solar{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;align-content:start}
+.sc{background:var(--tile);border-radius:var(--r);padding:clamp(12px,2.2vh,18px);min-width:0;display:flex;flex-direction:column;gap:8px}
+.sc.span3{grid-column:1/-1}.sc.span2{grid-column:span 2}
+.sc .lab{margin:0}
+.sc .kv{font-size:clamp(28px,6.5vh,50px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.sc .kv small{font-size:.4em;color:var(--muted);font-weight:700;letter-spacing:0;margin-left:4px}
+.sc .ksub{color:var(--muted);font-weight:600;font-size:.9em}
+.sc .bat{height:10px;border-radius:5px;background:var(--tile-2);overflow:hidden}
+.sc .bat i{display:block;height:100%;border-radius:5px}
+.dh{display:flex;align-items:center;gap:12px;min-width:0}
+.dh .ico{width:40px;height:40px;flex:none;display:grid;place-items:center}
+.dh .ico svg,.dh .ico img{width:100%;height:100%}
+.dh b{font-size:1.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh .hv{margin-left:auto;font-weight:800;font-size:1.3em;white-space:nowrap}
+.caps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px;font-size:.88em}
+.caps div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:4px 0;min-width:0}
+.caps span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.caps b{white-space:nowrap}
+.schart{width:100%;height:auto;display:block}
+.schart text{fill:var(--muted);font-size:10px;font-family:var(--font)}
 .area{flex:1;min-height:0;display:grid;gap:var(--gap);grid-auto-rows:minmax(0,1fr);overflow:auto}
 .area.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .area.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -115,6 +161,12 @@ button{cursor:pointer}
 .sw.off-line{opacity:.45}
 .sw .warn{color:var(--red)}
 .sw:active{transform:scale(.98)}
+.sw.air .airval{display:flex;flex-direction:column;gap:4px}
+.sw.air .big{font-size:clamp(40px,10vh,84px);font-weight:800;letter-spacing:-.04em;line-height:1}
+.sw.air .big small{font-size:.35em;font-weight:700;color:var(--muted);letter-spacing:0}
+.sw.air .lbl{color:var(--muted);font-weight:600;font-size:.95em}
+.sw.air .lbl i{font-style:normal;font-weight:700}
+.sw.air.on .pw{background:rgba(47,211,176,.2);color:var(--plug)}
 .hico{display:inline-grid;width:30px;height:30px;vertical-align:middle;margin-right:8px;color:var(--fg)}
 .hico svg,.hico img{width:100%;height:100%}
 
@@ -150,9 +202,71 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
   .time{font-size:56px}
   .area{overflow:visible;grid-auto-rows:minmax(150px,auto)}
   .area.c3,.area.c4,.area.c5{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .seg button small{display:none}
+  .area.home{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(140px,auto)}
+  .cat,.cat.wide{grid-column:span 1}
+  .area.solar{grid-template-columns:minmax(0,1fr)}
+  .sc.span2{grid-column:auto}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== Look v3.1: "Midnight Glass" — tiefe Nachtfarben, Glasflächen, Farbakzente je Bereich ===== */
+:root{--bg:#07090f;--rail:rgba(22,27,40,.62);--tile:rgba(28,34,50,.58);--tile-2:rgba(255,255,255,.07);--line:rgba(255,255,255,.08);
+  --fg:#f1f4fa;--muted:#94a0b8;--dim:#5f6a82;--r:clamp(18px,3vh,28px);--gap:clamp(10px,1.6vh,16px);--edge:rgba(255,255,255,.09);--hi:rgba(255,255,255,.14)}
+body{background:var(--bg)}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none;
+  background:radial-gradient(38% 45% at 8% 12%,rgba(64,110,255,.30),transparent 70%),
+             radial-gradient(35% 40% at 92% 88%,rgba(255,150,60,.18),transparent 70%),
+             radial-gradient(30% 35% at 70% 10%,rgba(47,211,176,.14),transparent 70%)}
+.rail,.cat,.sw,.heat,.sc,.seg{backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);box-shadow:inset 0 1px 0 var(--hi),0 10px 30px rgba(0,0,0,.28);border:1px solid var(--edge)}
+.rail{background:linear-gradient(180deg,rgba(30,37,56,.70),rgba(18,22,34,.62))}
+.time{font-weight:300;letter-spacing:-.05em;background:linear-gradient(180deg,#fff,#b9c6e6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.date{text-transform:capitalize;letter-spacing:.01em}
+.wx b{font-weight:400}
+.lab{color:#7d89a3;letter-spacing:.16em}
+.blk{border-top-color:var(--line)}
+.ebar{height:8px;background:rgba(255,255,255,.06)}
+.ebar i{box-shadow:0 0 12px currentColor}
+.hours div{background:rgba(255,255,255,.04);border-radius:12px;padding:6px 0}
+.sun{color:var(--fg)}
+.conn,.rbtn{background:rgba(255,255,255,.07);border:1px solid var(--edge)}
+.conn.live{color:#c9f2b3}
+/* Übersicht-Kacheln */
+.cat{background:linear-gradient(145deg,color-mix(in srgb,var(--acc) 22%,rgba(28,34,50,.7)) 0%,rgba(24,29,43,.62) 55%);transition:transform .15s,box-shadow .2s}
+.cat::after{opacity:.28;right:-20%;top:-50%;width:90%}
+.cat .ci{border-radius:50%;width:clamp(48px,9vh,70px);height:clamp(48px,9vh,70px);background:color-mix(in srgb,var(--acc) 26%,transparent);box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 8%,transparent)}
+.cat .go{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);color:var(--fg)}
+.cat h3{font-weight:700;font-size:clamp(18px,3.4vh,28px);color:#dfe5f2}
+.cat .s1{font-size:clamp(20px,4.2vh,34px);font-weight:800;letter-spacing:-.02em;color:var(--fg)}
+.cat .s2{font-weight:500}
+.cat:hover{box-shadow:inset 0 1px 0 var(--hi),0 14px 40px rgba(0,0,0,.35)}
+/* Kopfzeile Detailseite */
+.seg{background:rgba(22,27,40,.65);padding:6px 18px 6px 6px}
+.back{background:rgba(255,255,255,.09);border:1px solid var(--edge)}
+.seg h2{font-weight:800}
+/* Geräte-Kacheln */
+.sw{background:rgba(28,34,50,.55)}
+.sw .pw{background:rgba(255,255,255,.07);border:1px solid var(--edge)}
+.sw.on{background:linear-gradient(150deg,rgba(76,141,255,.20),rgba(28,34,50,.55) 60%)}
+.sw.on .pw{background:#4c8dff;color:#fff;box-shadow:0 0 18px rgba(76,141,255,.55);border-color:transparent}
+.sw.light.on{background:linear-gradient(150deg,rgba(255,200,97,.24),rgba(28,34,50,.55) 60%)}
+.sw.light.on .pw{background:var(--light);color:#2a1b00;box-shadow:0 0 18px rgba(255,200,97,.55)}
+.sw.air.on{background:linear-gradient(150deg,rgba(47,211,176,.20),rgba(28,34,50,.55) 60%)}
+.sw.air.on .pw{background:var(--plug);color:#04241d;box-shadow:0 0 18px rgba(47,211,176,.5)}
+.sw small.watt{color:#8db8ff}
+/* Heizung */
+.heat{background:rgba(28,34,50,.55)}
+.heat::before{display:none}
+.heat.on{background:linear-gradient(150deg,rgba(255,138,61,.22),rgba(28,34,50,.55) 60%)}
+.heat .target b{font-weight:300}
+.heat .ctl button{border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--edge)}
+.heat.on .ctl button:last-child{background:rgba(255,138,61,.25)}
+/* Solar */
+.sc{background:rgba(28,34,50,.55)}
+.sc .kv{font-weight:300}
+.caps div{border-bottom-color:var(--line)}
+.dlg{background:rgba(20,25,38,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--edge)}
+.scrim{background:rgba(3,5,10,.55)}
+@supports not (backdrop-filter:blur(1px)){.rail,.cat,.sw,.heat,.sc,.seg{background-color:#1a2030}}
 </style>
 
 </head>
@@ -160,7 +274,7 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
 <div class="panel">
   <aside class="rail" id="rail"></aside>
   <section class="main">
-    <div class="seg" role="tablist" aria-label="Bereich" id="seg"></div>
+    <div class="seg" id="seg" hidden></div>
     <div class="area" id="area"></div>
   </section>
 </div>
@@ -259,9 +373,11 @@ function mapDevice(d,zones){
   let t=CLS[d.virtualClass||d.class]||"router";
   if(/eco ?flow/i.test(info)&&/plug|steckdose|socket/i.test(info))t="socket";
   const cc=d.capabilitiesObj||{};
-  if(cc.onoff&&(t==="router"||t==="sensor"||t==="button"||(/^EF[ -]|eco ?flow/i.test(d.name||"")&&t!=="battery"&&!/solar|stream/i.test(d.name||""))))t="socket";
+  const swCap=cc.onoff?"onoff":(["set_power_supply_smartplug","switchstate"].find(k=>cc[k]&&cc[k].setable!==false&&(cc[k].type==="boolean"||typeof cc[k].value==="boolean"))||Object.keys(cc).find(k=>cc[k]&&cc[k].setable&&cc[k].type==="boolean"&&/switch|power_supply|relay/i.test(k)));
+  if(swCap&&(t==="router"||t==="sensor"||t==="button"||(/^EF[ -]|eco ?flow/i.test(d.name||"")&&t!=="battery"&&!/solar|stream/i.test(d.name||""))))t="socket";
+  const stCap=cc.onoff?"onoff":(cc.switchstate&&typeof cc.switchstate.value==="boolean"?"switchstate":swCap);
   const o={raw:{cls:d.class,vcls:d.virtualClass,drv:d.driverId||d.driverUri||"",caps:Object.keys(cc)},id:d.id,n:nm(d.name),z:(zones[d.zone]&&zones[d.zone].name)||"Ohne Raum",t,caps:c,live:true};
-  if(v("onoff")!==undefined)o.on=!!v("onoff");
+  if(swCap){o.swCap=swCap;const sv=v(stCap);o.on=sv===undefined?!!v(swCap):!!sv}
   const w=v("measure_power");if(w!=null)o.w=Math.round(w);else if('on' in o)o.w=0;
   if(v("target_temperature")!=null)o.temp=v("target_temperature");
   if(v("measure_temperature")!=null)o.cur=v("measure_temperature");
@@ -313,9 +429,16 @@ async function triggerFlow(name){
 /* Tageswerte aus dem Homey-Verlauf (Insights) */
 let DAILY={};
 let LOGIX=null;
-async function logIndex(){if(LOGIX)return LOGIX;const all=await api("/api/manager/insights/log/");LOGIX={};Object.values(all||{}).forEach(l=>{if(!l)return;const ou=l.ownerUri||l.uri||"",oi=l.ownerId||l.id||"";const dev=(ou.match(/homey:device:([\w-]+)/)||[])[1]||(String(l.id||"").match(/homey:device:([\w-]+)/)||[])[1];const cap=l.ownerId&&l.ownerUri?l.ownerId:String(l.id||"").split(":").pop();if(dev)LOGIX[dev+"|"+cap]={uri:ou||("homey:device:"+dev),id:oi&&l.ownerUri?oi:cap}});return LOGIX}
+let LOGSAMPLE="";
+async function logIndex(){if(LOGIX)return LOGIX;const all=await api("/api/manager/insights/log/");LOGIX={};try{LOGSAMPLE=Object.entries(all||{}).slice(0,2).map(([k,l])=>k+" → "+JSON.stringify({id:l.id,uri:l.uri,ownerUri:l.ownerUri,ownerId:l.ownerId})).join(" ; ")}catch(e){}Object.values(all||{}).forEach(l=>{if(!l)return;const ou=l.ownerUri||l.uri||"",oi=l.ownerId||l.id||"";const dev=(ou.match(/homey:device:([\w-]+)/)||[])[1]||(String(l.id||"").match(/homey:device:([\w-]+)/)||[])[1];const cap=l.ownerId&&l.ownerUri?l.ownerId:String(l.id||"").split(":").pop();if(dev)LOGIX[dev+"|"+cap]={uri:ou||("homey:device:"+dev),id:oi&&l.ownerUri?oi:cap}});return LOGIX}
+let INS_MODE=null,INS_TRIED=[];
 async function insightsToday(id,cap){let uri="homey:device:"+id,lid=cap;try{const ix=await logIndex();const x=ix[id+"|"+cap];if(x){uri=x.uri;lid=x.id}}catch(e){}
-  const r=await api(`/api/manager/insights/log/${encodeURIComponent(uri)}/${encodeURIComponent(lid)}/entry?resolution=today`);return((r&&r.values)||[]).filter(x=>x&&x.v!=null)}
+  const E=encodeURIComponent,full=uri+":"+lid,q="?resolution=today";
+  const forms=[["a",`/api/manager/insights/log/${E(uri)}/${E(lid)}/entry${q}`],["b",`/api/manager/insights/log/${uri}/${lid}/entry${q}`],["c",`/api/manager/insights/log/${E(full)}/entry${q}`],["d",`/api/manager/insights/log/${E(uri)}/${E(lid)}/entries${q}`]];
+  const order=INS_MODE?forms.filter(f=>f[0]===INS_MODE):forms;let last;
+  for(const [m,path] of order){try{const r=await api(path);INS_MODE=m;const vals=(r&&(r.values||r.entries))||(Array.isArray(r)?r:[]);return vals.filter(x=>x&&x.v!=null)}catch(e){last=e;if(INS_TRIED.length<6)INS_TRIED.push(m+": "+e.message)}}
+  throw last;
+}
 function applyDaily(){S.devices.forEach(d=>{const x=DAILY[d.id];if(x&&x.first!=null){const cur=d.caps&&d.caps[d.meter]&&d.caps[d.meter].value;d.kwh=Math.max(0,(cur!=null?cur:x.last)-x.first)}})}
 async function loadDaily(){
   if(S.mode!=="live")return;S.dailyAt=Date.now();
@@ -342,8 +465,9 @@ async function loadWeather(){
   try{
     const g=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=${encodeURIComponent(cfg.city)}`)).json();
     const p=g.results&&g.results[0];if(!p)throw 0;
-    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
+    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=sunrise,sunset&forecast_days=1&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
     S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,
+      sunrise:w.daily&&w.daily.sunrise?w.daily.sunrise[0].slice(11,16):null,sunset:w.daily&&w.daily.sunset?w.daily.sunset[0].slice(11,16):null,
       hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]}))};
   }catch(e){S.weather=null}
   render();
@@ -363,7 +487,8 @@ const alerts=()=>S.devices.filter(d=>d.warn).map(d=>({d,kind:"r",txt:d.warn}))
   .concat(S.devices.filter(d=>!d.warn&&d.batt!=null&&d.batt<=40&&d.t!=="vacuum").map(d=>({d,kind:"y",txt:`Batterie ${d.batt} %`})));
 function settingsModal(){
   return`<div class="scrim" data-close><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="st">
-   <h3 id="st">Verbindung & Panel</h3>
+   ${(()=>{const al=alerts();return`<h3 id="st">Hinweise${al.length?` (${al.length})`:""}</h3>${al.length?`<div class="hlist">${al.map(x=>`<div><span class="${x.kind}">${ic(x.kind==="r"?"alert":"batt",20)}</span><span><b>${esc(x.d.n)}</b><small>${esc(x.txt)} · ${esc(shortZone(x.d.z))}</small></span></div>`).join("")}</div>`:`<p>Alles in Ordnung, keine offenen Hinweise.</p>`}`})()}
+   <h3 style="margin-top:8px">Verbindung & Panel</h3>
    <p>Die App spricht direkt mit deinem Homey Pro im Heimnetz.</p>
    ${S.err?`<div class="msg err">${esc(S.err)}</div>`:S.mode==="live"?`<div class="msg ok">Verbunden · ${S.devices.length} Geräte</div>`:""}${S.mode==="live"&&S.daily==="fail"?`<div class="msg err">Energie-Tageswerte: ${esc(S.dailyErr||"keine Daten")}. Prüfe beim API-Schlüssel das Recht „Insights“.</div>`:""}
    <div class="fld"><label for="f-addr">Homey-Adresse (IP)</label><input id="f-addr" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.178.50" value="${esc(cfg.addr)}"></div>
@@ -372,44 +497,95 @@ function settingsModal(){
    <label class="trow" for="f-wake"><span>Bildschirm anlassen (Wandpanel)</span><input type="checkbox" id="f-wake" ${store.get("wake",false)?"checked":""}></label>
    <label class="trow" for="f-autofull"><span>Bei Berührung Vollbild (ohne Browserleiste)</span><input type="checkbox" id="f-autofull" ${store.get("autofull",true)?"checked":""}></label>
    <label class="trow" for="f-autonight"><span>Nachts abdunkeln (22–6 Uhr)</span><input type="checkbox" id="f-autonight" ${store.get("autonight",true)?"checked":""}></label>
-   <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""}</div></div></details>
-   <p style="font-size:12px">Version 2.4</p>
+   <details style="background:var(--tile,var(--card));border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">Diagnose: Geräte & Kategorien</summary><div style="font-size:12px;line-height:1.5;margin-top:8px;max-height:40vh;overflow:auto">${S.devices.map(d=>`<div><b>${esc(d.n)}</b> · erkannt: ${d.t} · Homey: ${esc((d.raw&&(d.raw.vcls||d.raw.cls))||"–")} · ${esc(d.raw?d.raw.caps.join(", "):"")}</div>`).join("")}<div style="margin-top:6px">Tageswerte: ${esc(S.daily||"–")}${S.dailyErr?" · "+esc(S.dailyErr):""} · Verlauf-Logs: ${LOGIX?Object.keys(LOGIX).length:"?"} · Modus: ${INS_MODE||"–"}</div><div>${esc(INS_TRIED.join(" | "))}</div><div>Log-Beispiele: ${esc(LOGSAMPLE||"–")}</div></div></details>
+   <p style="font-size:12px">Version 3.1</p>
    <div class="btns"><button class="btn" data-demo>Demo-Daten</button><button class="btn" data-close>Schließen</button><button class="btn primary" data-save>Speichern & verbinden</button></div>
   </div></div>`;
 }
 async function toggle(d,val){const prev=d.on,pw=d.w;d.on=val==null?!d.on:val;d.w=d.on?(d.base||0):0;render();
-  if(await setCap(d,"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
+  if(await setCap(d,d.swCap||"onoff",d.on,()=>{d.on=prev;d.w=pw}))toast(`${d.n} ${d.on?"an":"aus"}`)}
 function temp(d,delta){const prev=d.temp;d.temp=Math.min(28,Math.max(5,(d.temp??20)+delta));render();clearTimeout(d._t);d._t=setTimeout(()=>setCap(d,"target_temperature",d.temp,()=>{d.temp=prev}),600)}
 let wakeLock=null;
 async function applyWake(){try{if(store.get("wake",false)&&"wakeLock" in navigator&&document.visibilityState==="visible"){wakeLock=await navigator.wakeLock.request("screen")}else if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
 
 /* ---------- Wandpanel-Oberfläche ---------- */
+P.chev='<path d="M9 6l6 6-6 6"/>';P.batt=P.batt||'<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>';
+P.rise='<path d="M17 18a5 5 0 0 0-10 0M12 2v6M8 6l4-4 4 4M3 22h18M4.2 10.2l1.4 1.4M18.4 11.6l1.4-1.4M2 18h2M20 18h2"/>';P.set='<path d="M17 18a5 5 0 0 0-10 0M12 9V3M8 5l4 4 4-4M3 22h18M4.2 10.2l1.4 1.4M18.4 11.6l1.4-1.4M2 18h2M20 18h2"/>';
 P.plus='<path d="M12 5v14M5 12h14"/>';P.minus='<path d="M5 12h14"/>';P.power='<path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/>';
 const lamps=()=>S.devices.filter(d=>d.t==="lamp"&&'on' in d);
-const plugs=()=>S.devices.filter(d=>d.t==="socket");
+const isAir=d=>d.t==="air"||/levoit|luftrein|purifier/i.test(d.n)||(/luftentfeucht/i.test(d.n)&&!/^EF[ -]/i.test(d.n));
+const airs=()=>S.devices.filter(isAir);
+const plugs=()=>S.devices.filter(d=>d.t==="socket"&&!isAir(d));
 const heaters=()=>S.devices.filter(d=>d.t==="thermostat");
 const shortZone=z=>z.replace(/ \(.*\)/,"");
-let TAB=store.get("tab","heat");
+let TAB="home";
 const cols=n=>n<=4?"c2":n<=6?"c3":n<=8?"c4":"c5";
 
+function demoSolarCaps(){if(S.mode!=="demo")return;const C=(t,u,v)=>({title:t,units:u,value:v});const set=(n,caps,extra)=>{const d=S.devices.find(x=>x.n===n);if(d){d.caps=caps;Object.assign(d,extra||{})}};
+  set("STREAM Solar System",{measure_power:C("Leistung","W",240),"measure_power.pv1":C("PV 1","W",132),"measure_power.pv2":C("PV 2","W",108),"measure_power.grid":C("Netz","W",-15)},{w:240});
+  set("STREAM Ultra",{measure_battery:C("Akku","%",62),"measure_power.battery":C("Akku-Leistung","W",-85),"measure_power.load":C("Hausverbrauch","W",155),"measure_temperature":C("Temperatur","°C",24),"measure_capacity":C("Kapazität","Wh",1920)},{batt:62});
+  set("DELTA 2 Max",{measure_battery:C("Akku","%",5),"measure_power.in":C("Eingang","W",0),"measure_power.out":C("Ausgang","W",0),"measure_temperature":C("Temperatur","°C",21)},{batt:5});
+  set("BK21ZE1B7H630964",{measure_power:C("Leistung","W",240),"meter_power":C("Zähler","kWh",412.6)},{});}
+demoSolarCaps();const _ld=loadDemo;loadDemo=function(){_ld();demoSolarCaps()};
 function railHTML(){
   const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
   const t=tempOf(S.devices),h=humOf(S.devices),al=alerts();
   return`<div class="clockbox"><div class="time" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="date" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div></div>
    <div class="wx"><span style="color:${wi==="sun"?"var(--light)":"var(--muted)"}">${ic(wi,44,1.7)}</span><div><b>${w?Math.round(w.t):14}°</b><div class="sub">${esc(w?w.place:"Beispiel")} · ${wt}</div></div></div>
+   <div class="sun"><span title="Sonnenaufgang">${ic("rise",20,1.9)}<b>${w&&w.sunrise?w.sunrise:"07:52"}</b></span><span title="Sonnenuntergang">${ic("set",20,1.9)}<b>${w&&w.sunset?w.sunset:"18:21"}</b></span></div>
    <div class="blk"><span class="lab">Innen</span><div class="inside">${t!=null?`<span>${ic("thermo",20)}${fT(t)}°</span>`:""}${h!=null?`<span>${ic("drop",20)}${Math.round(h)} %</span>`:""}</div></div>
    <div class="blk"><span class="lab">Energie heute</span>
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
-   ${al.length?`<div class="blk wbox"><span class="lab">Hinweise</span><div class="warns">${al.slice(0,2).map(a=>`<div>${ic(a.kind==="r"?"alert":"batt",15)}<span>${esc(a.d.n)}: ${esc(a.txt)}</span></div>`).join("")}${al.length>2?`<div><span>+ ${al.length-2} weitere</span></div>`:""}</div></div>`:""}
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v2.4</button>
+   <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v3.1</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
-    <button class="rbtn" data-open="settings" aria-label="Einstellungen"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;
+    <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
+}
+const CATS={heat:["Heizung","thermo","var(--heat)"],light:["Licht","lamp","var(--light)"],plug:["Steckdosen","socket","var(--plug)"],air:["Air","air","#6fd6ff"],solar:["Solar","sun","#ffb547"]};
+const isSolarDev=d=>d.t!=="socket"&&!isAir(d)&&(d.gen||d.t==="battery"||d.t==="solar"||/eco ?flow|stream|delta|powerstream|powerocean/i.test(d.n+" "+(d.raw?d.raw.drv:""))||/^BK\d/i.test(d.n));
+const solarDevs=()=>S.devices.filter(isSolarDev);
+function capNum(d,re){let sum=null;Object.entries(d.caps||{}).forEach(([k,c])=>{if(c&&typeof c.value==="number"&&re.test(k+" "+(c.title||""))&&(!c.units||/W$/i.test(c.units)&&!/kW?h/i.test(c.units))){sum=(sum||0)+c.value}});return sum}
+function pvNow(){const devs=solarDevs();const g=S.devices.filter(d=>d.gen).reduce((a,d)=>a+(d.w||0),0);const pv=devs.reduce((a,d)=>{const v=capNum(d,/pv|solar/i);return v!=null?a+v:a},0);return Math.round(Math.max(g,pv))}
+function batAvg(){const b=solarDevs().map(d=>d.batt).filter(x=>x!=null);return b.length?Math.round(b.reduce((a,x)=>a+x,0)/b.length):null}
+function catSummary(k){
+  if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}° in den Räumen`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"alle halten"} · Soll Ø ${fT(soll)}°`]}
+  if(k==="light"){const L=lamps(),n=L.filter(d=>d.on).length;return[n?`${n} von ${L.length} an`:"alle aus",L.filter(d=>d.on).map(d=>d.n).join(", ")||"Tippen zum Schalten"]}
+  if(k==="plug"){const P=plugs(),n=P.filter(d=>d.on).length,w=P.filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);return[`${n} von ${P.length} an`,`zusammen ${fmtW(Math.round(w))} W`]}
+  if(k==="air"){const A=airs(),pm=(A.find(d=>d.pm!=null)||{}).pm,dh=A.find(d=>/luftentfeucht/i.test(d.n)),h=dh?humOf(S.devices.filter(x=>x.z===dh.z)):humOf(S.devices);return[`${A.filter(d=>d.on).length} von ${A.length} an`,[pm!=null?`PM2,5 ${pm}`:null,h!=null?`Luftfeuchte ${Math.round(h)} %`:null].filter(Boolean).join(" · ")||"Luftreiniger & Entfeuchter"]}
+  if(k==="solar"){const T=dayTotals(),b=batAvg();return[`${pvNow()} W jetzt`,[T.ready?`heute ${fE(T.sol)}`:null,b!=null?`Akku ${b} %`:null].filter(Boolean).join(" · ")||"EcoFlow"]}
 }
 function segHTML(){
-  const L=lamps(),Pl=plugs(),H=heaters(),heating=H.filter(d=>d.temp>d.cur).length;
-  const b=(k,icon,label,info)=>`<button role="tab" data-tab="${k}" aria-selected="${TAB===k}">${ic(icon,20)}${label}<small>${info}</small></button>`;
-  return b("heat","thermo","Heizung",heating?`${heating} heizt`:`${H.length}`)+b("light","lamp","Licht",`${L.filter(d=>d.on).length}/${L.length}`)+b("plug","socket","Steckdosen",`${Pl.filter(d=>d.on).length}/${Pl.length}`);
+  const sg=$("#seg");if(TAB==="home"){sg.hidden=true;return""}sg.hidden=false;
+  const [t,i,c]=CATS[TAB],[s1,s2]=catSummary(TAB);sg.style.setProperty("--acc",c);
+  return`<button class="back" data-tab="home" aria-label="Zurück zur Übersicht"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>Übersicht</button><h2>${ic(i,24)}${t}</h2><span class="info">${esc(s1)} · ${esc(s2)}</span>`;
+}
+function homeHTML(){
+  return Object.entries(CATS).map(([k,[t,i,c]],ix)=>{const [s1,s2]=catSummary(k);
+    return`<button class="cat${ix>=3?" wide":""}" data-tab="${k}" style="--acc:${c}"><span class="ct"><span class="ci">${ic(i,30,2)}</span><span class="go">${ic("chev",24,2.4)}</span></span><span><h3>${t}</h3><div class="s1">${esc(s1)}</div><div class="s2">${esc(s2)}</div></span></button>`}).join("");
+}
+function fmtCap(c){if(typeof c.value==="boolean")return c.value?"Ja":"Nein";let v=c.value;if(typeof v==="number")v=(Math.round(v*10)/10).toString().replace(".",",");return v+(c.units?" "+c.units:"")}
+function capTitle(k,c){const t=c.title;return (typeof t==="string"?t:t&&(t.de||t.en))||k.replace(/_/g," ")}
+function solarChart(){
+  const H=S.solarHist,W=600,Hh=150,l=36,b=22,t=6,max=Math.max(100,...H),top=Math.ceil(max/100)*100,x=i=>l+i*(W-l-6)/23,y=v=>Hh-b-(v/top)*(Hh-b-t);
+  const line=H.map((v,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)).join(" "),now=new Date().getHours();
+  return`<svg class="schart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Solarleistung heute in Watt">${[0,.5,1].map(f=>`<line x1="${l}" x2="${W}" y1="${y(top*f)}" y2="${y(top*f)}" stroke="#2c323c"/><text x="${l-6}" y="${y(top*f)+4}" text-anchor="end">${Math.round(top*f)}</text>`).join("")}
+   <path d="${line} L${x(23)} ${y(0)} L${x(0)} ${y(0)}Z" fill="rgba(255,181,71,.18)"/><path d="${line}" fill="none" stroke="#ffb547" stroke-width="2.2"/><circle cx="${x(now)}" cy="${y(H[now]||0)}" r="4.5" fill="#ffb547" stroke="#1c2027" stroke-width="2"/>
+   ${[0,6,12,18,23].map(i=>`<text x="${x(i)}" y="${Hh-5}" text-anchor="middle">${i===23?"24":i}:00</text>`).join("")}</svg>`;
+}
+function solarHTML(){
+  const T=dayTotals(),b=batAvg(),pv=pvNow(),devs=solarDevs(),use=plugs().filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);
+  const kpi=(lab,val,unit,sub,col)=>`<div class="sc"><span class="lab">${lab}</span><div class="kv" style="color:${col}">${val}<small>${unit}</small></div><div class="ksub">${sub}</div></div>`;
+  const [ev,eu]=eParts(T.ready?T.sol:null);
+  let h=kpi("Solar jetzt",pv,"W",pv>use?`Überschuss ca. ${Math.round(pv-use)} W`:`Steckdosen ziehen ${Math.round(use)} W`,"#ffb547")
+   +kpi("Heute erzeugt",ev,eu,T.ready?"seit Mitternacht":S.daily==="fail"?"Verlauf nicht lesbar":"wird geladen …","var(--green)")
+   +`<div class="sc"><span class="lab">Speicher</span><div class="kv" style="color:${b!=null&&b<15?"var(--red)":"var(--cool)"}">${b!=null?b:"–"}<small>%</small></div><div class="bat"><i style="width:${b||0}%;background:${b!=null&&b<15?"var(--red)":"var(--cool)"}"></i></div><div class="ksub">${solarDevs().filter(d=>d.batt!=null).map(d=>esc(d.n)+" "+d.batt+" %").join(" · ")||"kein Akku gemeldet"}</div></div>`
+   +`<div class="sc span3"><span class="lab">Solarleistung heute</span>${solarChart()}</div>`;
+  h+=devs.map(d=>{const caps=Object.entries(d.caps||{}).filter(([k,c])=>c&&(typeof c.value==="number"||typeof c.value==="boolean")&&!/^(onoff|measure_battery)$/.test(k)&&!(k.startsWith("alarm_")&&!c.value)).slice(0,10);
+    const hv=d.batt!=null?`${d.batt} %`:d.w!=null?`${fmtW(d.w)} W`:"";
+    return`<div class="sc${caps.length>4?" span2":""}"><div class="dh"><span class="ico">${devImg(d,d.t==="battery"?"batt":"solar",40)}</span><b>${esc(d.n)}</b><span class="hv">${hv}</span></div>${d.warn?`<div class="ksub" style="color:var(--red)">${esc(d.warn)}</div>`:""}
+     ${caps.length?`<div class="caps">${caps.map(([k,c])=>`<div><span>${esc(capTitle(k,c))}</span><b>${esc(fmtCap(c))}</b></div>`).join("")}</div>`:`<div class="ksub">${esc(shortZone(d.z))}</div>`}</div>`}).join("");
+  return h;
 }
 function heatTile(d){
   const on=d.temp!=null&&d.cur!=null&&d.temp>d.cur;
@@ -426,9 +602,26 @@ function swTile(d,kind){
   return can?`<button class="sw ${kind}${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}">${inner}</button>`:`<div class="sw ${kind}${off}">${inner}</div>`;
 }
 const fmtW=w=>w==null?"–":(Math.round(w*10)/10).toString().replace(".",",");
+function pmLabel(v){return v==null?null:v<=12?["gut","var(--green)"]:v<=35?["mäßig","var(--light)"]:["schlecht","var(--red)"]}
+function humLabel(h){return h==null?null:h<40?["trocken","var(--light)"]:h<=60?["ideal","var(--green)"]:["feucht","var(--cool)"]}
+function airTile(d){
+  const off=d.warn?" off-line":"",can='on' in d,purifier=/levoit|luftrein|purifier/i.test(d.n)||(d.raw&&/purifier/i.test(d.raw.vcls||d.raw.cls||""));
+  const zoneHum=humOf(S.devices.filter(x=>x.z===d.z)),hum=d.hum!=null?d.hum:zoneHum;
+  let big,label,lab;
+  if(purifier){big=d.pm!=null?`${d.pm}<small> µg/m³</small>`:"–";label="Feinstaub PM2,5";lab=pmLabel(d.pm)}
+  else{big=hum!=null?`${Math.round(hum)}<small> %</small>`:"–";label=`Luftfeuchte ${esc(shortZone(d.z))}`;lab=humLabel(hum)}
+  const extra=[d.w!=null&&d.on?`${fmtW(d.w)} W`:null,d.kwh!=null?`heute ${fE(d.kwh)}`:null].filter(Boolean).join(" · ");
+  const inner=`<span class="top"><span class="ico">${devImg(d,"air",46)}</span>${can?`<span class="pw">${PW}</span>`:""}</span>
+   <span class="airval"><b class="big">${big}</b><span class="lbl">${label}${lab?` <i style="color:${lab[1]}">● ${lab[0]}</i>`:""}</span></span>
+   <span class="txt"><b>${esc(d.n)}</b><small class="${d.warn?"warn":""}">${esc(d.warn||(can?(d.on?"An":"Aus"):shortZone(d.z)))}${extra?" · "+extra:""}</small></span>`;
+  return can?`<button class="sw air${d.on?" on":""}${off}" data-tog="${d.id}" aria-pressed="${d.on}">${inner}</button>`:`<div class="sw air${off}">${inner}</div>`;
+}
 function areaHTML(){
   const a=$("#area");
+  if(TAB==="home"){a.className="area home";return homeHTML()}
+  if(TAB==="solar"){a.className="area solar";return solarHTML()}
   if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||'<div class="sub">Keine Heizungen gefunden.</div>'}
+  if(TAB==="air"){const A=airs();a.className="area c2";return A.map(airTile).join("")||'<div class="sub">Keine Luftgeräte gefunden.</div>'}
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
   return list.map(d=>swTile(d,TAB)).join("")||'<div class="sub">Keine Geräte gefunden.</div>';
 }
@@ -449,7 +642,7 @@ document.addEventListener("click",e=>{
     store.set("wake",$("#f-wake").checked);store.set("autonight",$("#f-autonight").checked);store.set("autofull",$("#f-autofull").checked);applyWake();S.modal=null;loadWeather();connect();return}
   if(b.dataset.demo!==undefined){S.err="";loadDemo();S.modal=null;render();toast("Demo-Daten geladen");return}
   if(b.id==="nightbtn"){setNight(!S.night);return}
-  if(b.dataset.tab){TAB=b.dataset.tab;store.set("tab",TAB);render();return}
+  if(b.dataset.tab){TAB=b.dataset.tab;render();$("#area").scrollTop=0;return}
   if(b.dataset.temp){const d=dev(b.dataset.temp);if(d)temp(d,+b.dataset.d);return}
   if(b.dataset.tog){const d=dev(b.dataset.tog);if(d)toggle(d);return}
 });
@@ -464,6 +657,8 @@ const isStandalone=()=>matchMedia("(display-mode: fullscreen)").matches||matchMe
 function goFull(){const el=document.documentElement;if(document.fullscreenElement||isStandalone())return;const f=el.requestFullscreen||el.webkitRequestFullscreen;if(f){try{const r=f.call(el,{navigationUI:"hide"});if(r&&r.catch)r.catch(()=>{})}catch(e){}}}
 if(store.get("autofull",true))document.addEventListener("pointerdown",goFull,{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
+["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 render();tick();setInterval(tick,15000);applyWake();
 if(cfg.addr&&cfg.key)connect(true);if(cfg.city)loadWeather();
 

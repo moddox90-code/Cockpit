@@ -289,7 +289,7 @@ html.hub .panel{display:block;padding:3vh 3vw}
 .hb small{font-size:4.5vh;color:var(--muted);margin-left:.4vw}
 .hs{color:var(--muted);font-weight:600;font-size:2.7vh;margin-top:1vh}
 .hal{margin-top:auto;display:flex;flex-direction:column;gap:1vh;font-size:2.8vh;font-weight:600}
-/* Hub v4.2 */
+/* Hub v4.3 */
 .hbars i.st{display:flex;flex-direction:column-reverse;background:none;opacity:1;overflow:hidden;border-radius:.4vh .4vh 0 0}
 .hbars i.st u{display:block;text-decoration:none}
 .hbars i.st.now{outline:1px solid rgba(255,255,255,.5)}
@@ -679,7 +679,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.2</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.3</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -802,7 +802,7 @@ function hubHTML(){
   else{const hist=(S.solarHist||[]).slice(0,24),mxH=Math.max(1,...hist);bars=hist.map((v,i)=>`<i class="${i===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("")}
   const batt=B.main?B.main.batt:null,bw=B.pw;
   const row=(icon,lab,val,col)=>`<div class="hrow"><span>${ic(icon,18,2)}${lab}</span><b${col?` style="color:${col}"`:""}>${val}</b></div>`;
-  const netTxt=T.imp!=null?`${fE(T.imp)} bezogen${T.exp?` · ${fE(T.exp)} eingespeist`:""}`:null;
+  const netTxt=T.imp!=null?fE(T.imp)+(T.exp>=.05?` · ${fE(T.exp)} raus`:""):null;
   return`<div class="hubgrid">
    <div class="hleft"><div class="htime" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="hdate" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div>
     <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}</span></div>
@@ -810,7 +810,7 @@ function hubHTML(){
     <div class="hsec">Nächste Stunden</div><div class="hhours">${hours||'<div class="hnone">–</div>'}</div>
     <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div></div>
    <div class="hcard hcal"><div class="hl">${ic("cal",22,2)}<span>Termine</span></div>${cal}</div>
-   <div class="hcard hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?heiz+" Heizung"+(heiz>1?"en":"")+" heizt":"alle halten"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div>
+   <div class="hcard hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?`<b style="font-size:inherit;font-weight:700;color:var(--heat)">${heiz} ${heiz>1?"heizen":"heizt"}</b>`:"Heizung aus"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div>
    <div class="hcard hen"><div class="hl">${ic("sun",22,2)}<span>Energie heute</span></div>
     <div class="hkpi"><div><small>Erzeugt</small><b style="color:#ffb547">${sv}<em>${su}</em></b></div><div><small>Verbraucht</small><b style="color:var(--cool)">${uv}<em>${uu}</em></b></div></div>
     <div class="hcmp"><div><i style="width:${(sol||0)/mx*100}%;background:#ffb547"></i></div><div><i style="width:${(use||0)/mx*100}%;background:var(--cool)"></i></div></div>
@@ -820,7 +820,7 @@ function hubHTML(){
      ${row("batt","Akku",batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""),batt!=null&&batt<15?"var(--red)":"var(--green)")}
      ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
      ${row("bolt",g!=null&&g<0?"Einspeisung":"Netz jetzt",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
-     ${netTxt?row("bolt","Netz heute",netTxt):""}
+     ${netTxt?row("bolt","Netzbezug heute",netTxt):""}
     </div></div>
   </div>`;
 }
@@ -869,7 +869,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.2";
+const APP_VER="4.3";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

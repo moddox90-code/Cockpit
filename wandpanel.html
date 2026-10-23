@@ -687,7 +687,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.5</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.6</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -874,7 +874,13 @@ setInterval(()=>{if(document.visibilityState==="visible")loadWeather()},900000);
 setInterval(()=>{if(S.mode==="live"&&document.visibilityState==="visible")loadDaily()},300000);
 /* Kalender (nur Hub): liest die Tags der Homey-App „IcalCalendar" */
 function parseCal(s){if(!s||typeof s!=="string")return[];const p=s.split("; "),out=[];for(let i=0;i+1<p.length;i+=2)out.push({t:p[i],w:p[i+1].replace(" bis ","–")});return out}
-async function loadCal(){if(!HUB||!cfg.addr||!cfg.key)return;
+async function loadCal(){if(!HUB)return;
+  const gas=HP.get("cal");
+  if(gas){try{const r=await fetch(gas+(gas.includes("?")?"&":"?")+"t="+Date.now());const j=await r.json();
+      S.cal={ok:true,src:"google",today:(j.today||[]).map(e=>({t:e.t,w:e.w})),tomorrow:(j.tomorrow||[]).map(e=>({t:e.t,w:e.w}))}}
+    catch(e){S.cal={ok:false,err:e.message,today:[],tomorrow:[]}}
+    render();return}
+  if(!cfg.addr||!cfg.key)return;
   try{const all=await api("/api/manager/flowtoken/flowtoken/");const L=Object.entries(all||{}).map(([k,v])=>Object.assign({key:k},v)).filter(t=>/no\.runely\.calendar/.test(t.key+" "+(t.uri||"")));
     const get=id=>{const t=L.find(t=>(t.key+":"+(t.id||"")).endsWith(id));return t?t.value:null};
     S.cal={ok:L.length>0,today:parseCal(get("events_today_title_stamps")),tomorrow:parseCal(get("events_tomorrow_title_stamps"))}}
@@ -890,7 +896,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.5";
+const APP_VER="4.6";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

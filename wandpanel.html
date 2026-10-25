@@ -14,6 +14,14 @@
 <link rel="apple-touch-icon" href="panel-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}.uleg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:.92em;color:var(--muted);font-weight:600}
 .uleg span{display:flex;align-items:center;gap:6px}.uleg i{width:11px;height:11px;border-radius:3px;display:inline-block}.uleg b{color:var(--fg)}
+#hiwarn{display:none}
+#hiwarn.show{display:flex;position:fixed;z-index:60;left:50%;top:12px;transform:translateX(-50%);max-width:min(92vw,980px);align-items:center;gap:6px 14px;flex-wrap:wrap;
+ background:linear-gradient(90deg,#c62828,#e5484d);color:#fff;border-radius:16px;padding:10px 16px;box-shadow:0 10px 30px rgba(229,72,77,.45);animation:hipulse 2s ease-in-out infinite}
+#hiwarn b{display:flex;align-items:center;gap:8px;font-size:1.1em}
+#hiwarn span{opacity:.92;font-weight:600;font-size:.9em}
+#hiwarn button{margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:10px;padding:6px 12px;font:inherit;font-weight:700}
+html.hub #hiwarn.show{top:2vh;font-size:2.8vh;padding:1.4vh 2vw;border-radius:2vh}
+@keyframes hipulse{50%{box-shadow:0 10px 40px rgba(229,72,77,.8)}}
 </style>
 <title>Davids Wandpanel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -695,7 +703,7 @@ function railHTML(){
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
    <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
-   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.7</button>
+   <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.8</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
@@ -856,7 +864,25 @@ function hubHTML(){
     </div></div>
   </div>`;
 }
+/* ---------- Warnung bei ungewöhnlich hohem Verbrauch ---------- */
+const HIGH_ABS=3500,HIGH_MIN=2500,HIGH_FACTOR=4,HIGH_HOLD=180000;
+function powerNow(){const h=houseCap();if(h&&h.v>0)return Math.round(h.v);const m=meterNow();return m!=null&&m>0?m:null}
+function baseLoad(){const H=(S.hourly&&S.hourly.house)||[],h=new Date().getHours(),v=H.slice(0,h).filter(x=>x>20).sort((a,b)=>a-b);return v.length>=3?v[Math.floor(v.length/2)]:300}
+function highCheck(){const p=powerNow();if(p==null||S.mode!=="live"&&S.mode!=="demo"){S.hiSince=null;return null}
+  const thr=Math.max(HIGH_MIN,Math.round(baseLoad()*HIGH_FACTOR/100)*100);
+  if(p<thr){S.hiSince=null;return null}
+  if(!S.hiSince)S.hiSince=Date.now();const dur=Date.now()-S.hiSince;
+  if(p<HIGH_ABS&&dur<HIGH_HOLD)return null;
+  const top=S.devices.filter(d=>d.w>=50&&!d.gen&&d!==ultraDev()&&d!==gridDev()&&!/stream|delta|ecoflow$/i.test(d.n)).sort((a,b)=>b.w-a.w).slice(0,3);
+  return{p,thr,min:Math.round(dur/60000),top}}
+function highHTML(){const h=highCheck(),el=document.getElementById("hiwarn");if(!el)return;
+  if(!h||(S.hiMute&&Date.now()<S.hiMute)){el.className="";el.innerHTML="";return}
+  el.className="show";
+  el.innerHTML=`<b>${ic("alert",22,2.2)} Hoher Stromverbrauch: ${h.p.toLocaleString("de-DE")} W</b><span>${h.min?`seit ${h.min} Min · `:""}normal bis ca. ${h.thr.toLocaleString("de-DE")} W${h.top.length?` · größte Verbraucher: ${h.top.map(d=>`${esc(d.n)} ${Math.round(d.w).toLocaleString("de-DE")} W`).join(", ")}`:""}</span>${HUB?"":`<button data-himute>ausblenden</button>`}`}
+document.addEventListener("click",e=>{if(e.target.closest("[data-himute]")){S.hiMute=Date.now()+1800000;highHTML()}});
 function render(){
+  if(!document.getElementById("hiwarn")){const w=document.createElement("div");w.id="hiwarn";document.body.appendChild(w)}
+  highHTML();
   if(HUB){document.querySelector(".panel").innerHTML=hubHTML();return}
   $("#rail").innerHTML=railHTML();$("#seg").innerHTML=segHTML();$("#area").innerHTML=areaHTML();
   $("#modal").innerHTML=S.modal==="settings"?settingsModal():"";
@@ -907,7 +933,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.7";
+const APP_VER="4.8";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

@@ -508,7 +508,7 @@ async function connect(silent){
   try{
     const [devs,zones]=await Promise.all([api("/api/manager/devices/device/"),api("/api/manager/zones/zone/")]);
     S.devices=Object.values(devs).map(d=>mapDevice(d,zones));
-    S.mode="live";S.err="";
+    S.mode="live";S.err="";if(!S.histLive){S.solarHist=Array(24).fill(0);S.histLive=true}
     api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
     Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
       .then(([a,b])=>{S.flows=[...Object.values(a).map(f=>({id:f.id,name:f.name,adv:false})),...Object.values(b).map(f=>({id:f.id,name:f.name,adv:true}))]});
@@ -602,13 +602,13 @@ async function loadDaily(){
   const src=pvSource();S.pvWh=null;S.pvSrc=src?src.d.n+" · "+src.cap:"–";
   const u=ultraDev(),pvMeter=u&&capsOf(u).find(([k,c])=>isKWh(c)&&/pv|solar/i.test(k+" "+(c.title||""))&&!/limit/i.test(k));
   if(pvMeter){try{const v=await insightsToday(u.id,pvMeter[0]);const cur=pvMeter[1].value;if(v.length)S.pvWhMeter=Math.max(0,(cur-v[0].v)*1000)}catch(e){}}
-  if(src){try{const v=await insightsToday(src.d.id,src.cap);const H=integrate(v);S.solarHist=H.map(x=>Math.round(x));S.pvWh=H.reduce((a,b)=>a+b,0);ok++}catch(e){err=e.message}}
+  S.hErr=[];if(src){try{const v=await insightsToday(src.d.id,src.cap);const H=integrate(v);S.solarHist=H.map(x=>Math.round(x));S.pvWh=H.reduce((a,b)=>a+b,0);ok++}catch(e){err=e.message;S.hErr.push("Solar: "+e.message)}}else S.hErr.push("Solar: keine Quelle")
   GRID={};const hc=houseCap();const gm=gridMeters();const cd=ultraChg(ultraDev());
   S.hourly={};
   for(const [key,src] of [["chg",cd.c],["dis",cd.d]]){if(!src)continue;try{const v=await insightsToday(ultraDev().id,src.cap);const Hh=integrate(v);S.hourly[key]=Hh;GRID[key]=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
   {const gd=gridDev();if(gd&&gd.caps&&gd.caps.measure_power){try{S.hourly.grid=integrate(await insightsToday(gd.id,"measure_power"))}catch(e){}}}
   for(const key of ["imp","exp"]){const cap=gm[key];if(!cap)continue;try{const v=await insightsToday(gm.g.id,cap);const cur=gm.g.caps[cap]&&gm.g.caps[cap].value;if(v.length&&typeof cur==="number")GRID[key]=Math.max(0,cur-v[0].v);ok++}catch(e){err=e.message}}
-  if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);const Hh=integrate(v);S.hourly.house=Hh;GRID.house=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
+  if(hc){try{const v=await insightsToday(hc.d.id,hc.cap);const Hh=integrate(v);S.hourly.house=Hh;GRID.house=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message;S.hErr.push("Haus: "+e.message)}}else S.hErr.push("Haus: keine Quelle")
   S.daily=ok?"ok":"fail";S.dailyErr=err;applyDaily();render();
 }
 const fE=k=>k==null?"–":k<1?`${Math.round(k*1000)} Wh`:`${k.toFixed(2).replace(".",",")} kWh`;
@@ -839,7 +839,7 @@ function hubHTML(){
     bars=stk.map((x,i)=>i>hNow?`<i class="st fut"></i>`:`<i class="st${i===hNow?" now":""}" style="height:${Math.max(1.5,(x.s+x.b+x.g)/mxH*100)}%">${x.s?`<u style="flex:${x.s};background:#ffd84a"></u>`:""}${x.b?`<u style="flex:${x.b};background:#7fe04e"></u>`:""}${x.g?`<u style="flex:${x.g};background:#6fd6ef"></u>`:""}</i>`).join("");
     const tot=k=>stk.reduce((a,x)=>a+x[k],0),all=Math.max(.001,tot("s")+tot("b")+tot("g")),pc=k=>Math.round(tot(k)/all*100);
     legend=`<div class="hleg"><span><i style="background:#ffd84a"></i>Solar ${pc("s")} %</span><span><i style="background:#7fe04e"></i>Akku ${pc("b")} %</span><span><i style="background:#6fd6ef"></i>Netz ${pc("g")} %</span></div>`}
-  else{const hist=(S.solarHist||[]).slice(0,24),mx0=Math.max(1,...hist),stp=mx0>400?200:mx0>200?100:50;top=Math.ceil(mx0/stp)*stp;const mxH=top;bars=hist.map((v,i)=>`<i class="${i===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("")}
+  else{const hist=(S.solarHist||[]).slice(0,24),mx0=Math.max(1,...hist),stp=mx0>400?200:mx0>200?100:50;top=Math.ceil(mx0/stp)*stp;const mxH=top;bars=hist.map((v,i)=>i>hNow?`<i class="st fut"></i>`:`<i class="${i===hNow?"now":""}" style="height:${Math.max(2,v/mxH*100)}%"></i>`).join("");if(S.mode==="live"&&S.hErr&&S.hErr.length)legend=`<div class="hleg" style="color:#ff8a7a">Stundenwerte: ${esc(S.hErr.join(" · "))}</div>`}
   const batt=B.main?B.main.batt:null,bw=B.pw;
   const row=(icon,lab,val,col)=>`<div class="hrow"><span>${ic(icon,18,2)}${lab}</span><b${col?` style="color:${col}"`:""}>${val}</b></div>`;
   const netTxt=T.imp!=null?fE(T.imp)+(T.exp>=.05?` · ${fE(T.exp)} raus`:""):null;
@@ -933,7 +933,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.8";
+const APP_VER="4.9";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

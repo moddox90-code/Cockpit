@@ -453,7 +453,7 @@ const SOLAR_DEMO=[0,0,0,0,0,0,0,0,40,180,420,610,700,560,480,300,120,20,0,0,0,0,
 const store={get(k,d){try{const v=localStorage.getItem("dz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("dz_"+k,JSON.stringify(v))}catch(e){}}};
 let cfg=store.get("cfg",{addr:"",key:"",city:""});
 const HP=new URLSearchParams((location.hash||"").replace(/^#/,""));const HUB=HP.has("hub");
-if(HUB){cfg={addr:HP.get("addr")||cfg.addr,key:HP.get("key")||cfg.key,city:HP.get("city")||cfg.city||"Stockach"};document.documentElement.classList.add("hub")}
+if(HUB){let hk=(HP.get("key")||"").trim(),hc=HP.get("city");if(hk.includes("=")){const i=hk.indexOf("=");if(!hc)hc=hk.slice(i+1);hk=hk.slice(0,i)}cfg={addr:HP.get("addr")||cfg.addr,key:hk||cfg.key,city:hc||cfg.city||"Stockach"};document.documentElement.classList.add("hub")}
 let S={mode:"demo",err:"",devices:[],users:DEMO_USERS,flows:[],weather:null,solarHist:SOLAR_DEMO.slice(),histLive:false,view:"home",spk:null,vol:35,night:false,modal:null};
 const sandboxed=/claude\.ai|claudeusercontent|anthropic/.test(location.host)||location.protocol==="about:";
 const DEMO_KWH={"Strom Fernseher":.706,"FB Steckdose Ecovacs":.437,"FB Steckdose":.131,"Repeater":.088,"EF Luftentfeuchter":.081,"EF Flur":.064,"Luftentfeuchter":.041,"EF Spülmaschine":.021,"EF Waschmaschine":.019,"STREAM Solar System":3.5};
@@ -933,7 +933,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.9";
+const APP_VER="4.10";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

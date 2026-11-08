@@ -378,6 +378,18 @@ html.hub .hhours{margin-top:0}
 .hrow{display:flex;align-items:center;justify-content:space-between;gap:1vw;font-size:2.6vh;font-weight:600}
 .hrow span{color:var(--muted);display:flex;align-items:center;gap:.6vw}
 .hrow b{font-weight:600;white-space:nowrap}
+
+/* v4.13 Hub: links Wetter + Temperatur, Mitte Termine oben / Depot unten (halbe Breite), rechts Energie */
+.hubgrid{grid-template-columns:1fr 1.4fr 1.08fr;grid-template-rows:1fr 36vh}
+.hleft{grid-column:1;grid-row:1 / span 2;gap:1.2vh;padding:2.6vh 1.8vw}.hleft .htime{font-size:11vh}.hleft .hwx b{font-size:6.5vh}
+.hcal{grid-column:2;grid-row:1}
+.hen{grid-column:3;grid-row:1 / span 2}
+.hdepot{grid-column:2;grid-row:2;background:linear-gradient(160deg,rgba(143,180,255,.16),#141a28 60%);background-color:#141a28}
+.hleft .hheat{background:linear-gradient(90deg,rgba(255,138,61,.18),rgba(255,255,255,.04) 70%);border-radius:1.6vh;padding:1.2vh 1vw;gap:1vw;display:flex;align-items:center}
+.hleft .hsun{gap:.6vw}.hleft .hsun>div{min-width:0;padding-left:.6vw;padding-right:.6vw}
+.hleft .hheat b{font-size:4.6vh}.hleft .hheat small{font-size:2vh}
+.hdtop{display:flex;align-items:baseline;gap:1.2vw;margin:.6vh 0}.hdtop b{font-size:5vh;font-weight:600;white-space:nowrap}.hdtop small{color:var(--muted);font-size:2.2vh;font-weight:600}
+.hdch{flex:1;min-height:0;display:flex;gap:.8vw}.hdy{display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font-size:1.8vh;font-weight:600;padding:.4vh 0}.hdline{flex:1;min-width:0}
 </style>
 
 </head>
@@ -632,16 +644,16 @@ function dayTotals(){
   const plugUse=cons.reduce((a,d)=>a+d.kwh,0);return{sol,use:house!=null?house:plugUse,house,plugUse,imp,exp,cons:cons.sort((a,b)=>b.kwh-a.kwh),ready:S.daily==="ok"||S.daily==="demo"};
 }
 const kpi=(k,color,label)=>{const [v,u]=eParts(k);return`<div class="kpi"><b style="color:${color}">${v}<small>${u}</small></b><span>${label}</span></div>`};
-const WMO=c=>c===0?["sun","Sonnig"]:c<=2?["sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
+const WMO=(c,day)=>c===0?[day===0?"moon":"sun",day===0?"Klar":"Sonnig"]:c<=2?[day===0?"moon":"sun","Leicht bewölkt"]:c<=48?["cloud","Bewölkt"]:c<=67||c>=80?["rain","Regen"]:["cloud","Wechselhaft"];
 async function loadWeather(){
   if(!cfg.city||sandboxed){S.weather=null;return}
   try{
     const g=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=${encodeURIComponent(cfg.city)}`)).json();
     const p=g.results&&g.results[0];if(!p)throw 0;
-    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
-    S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,
+    const w=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&forecast_hours=6&wind_speed_unit=ms&timezone=auto`)).json();
+    S.weather={place:p.name,t:w.current.temperature_2m,feel:w.current.apparent_temperature,hum:w.current.relative_humidity_2m,wind:w.current.wind_speed_10m,code:w.current.weather_code,day:w.current.is_day,
       sunrise:w.daily&&w.daily.sunrise?w.daily.sunrise[0].slice(11,16):null,sunset:w.daily&&w.daily.sunset?w.daily.sunset[0].slice(11,16):null,
-      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i]})),
+      hours:w.hourly.time.map((t,i)=>({h:t.slice(11,13)+" Uhr",t:w.hourly.temperature_2m[i],code:w.hourly.weather_code[i],day:w.hourly.is_day?w.hourly.is_day[i]:undefined})),
       days:(w.daily&&w.daily.time||[]).map((t,i)=>({d:t,max:w.daily.temperature_2m_max[i],min:w.daily.temperature_2m_min[i],code:w.daily.weather_code[i]}))};
   }catch(e){S.weather=null}
   render();
@@ -702,7 +714,7 @@ function demoSolarCaps(){if(S.mode!=="demo")return;const C=(t,u,v)=>({title:t,un
   set("BK21ZE1B7H630964",{measure_power:C("Netzleistung","W",271),"meter_power.imported":C("Gesamtbezug","kWh",1481.01),"meter_power.exported":C("Gesamteinspeisung","kWh",321.95)},{w:271});S.pvWh=240;GRID={house:2.04,imp:1.8,exp:0};}
 demoSolarCaps();const _ld=loadDemo;loadDemo=function(){_ld();demoSolarCaps()};
 function railHTML(){
-  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
+  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1,w?w.day:undefined),T=dayTotals(),mx=Math.max(T.sol,T.use,.001);
   const t=tempOf(S.devices),h=humOf(S.devices),al=alerts();
   return`<div class="clockbox"><div class="time" id="time">${n.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}</div><div class="date" id="date">${n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div></div>
    <div class="wx"><span style="color:${wi==="sun"?"var(--light)":"var(--muted)"}">${ic(wi,44,1.7)}</span><div><b>${w?Math.round(w.t):14}°</b><div class="sub">${esc(w?w.place:"Beispiel")} · ${wt}</div></div></div>
@@ -711,7 +723,7 @@ function railHTML(){
    <div class="blk"><span class="lab">Energie heute</span>
     <div class="erow"><span style="color:var(--light)">${ic("sun",18)}</span><div class="ebar"><i style="width:${T.sol/mx*100}%;background:var(--light)"></i></div><b>${T.ready?fE(T.sol):S.daily==="fail"?"–":"…"}</b></div>
     <div class="erow"><span style="color:var(--cool)" title="${T.house!=null?"Hausverbrauch":"Mess-Steckdosen"}">${ic("bolt",18)}</span><div class="ebar"><i style="width:${T.use/mx*100}%;background:var(--cool)"></i></div><b>${T.ready?fE(T.use):S.daily==="fail"?"–":"…"}</b></div>${S.daily==="fail"?`<small style="color:var(--red);font-size:.78em">Tageswerte nicht lesbar${S.dailyErr?": "+esc(S.dailyErr):""}</small>`:""}</div>
-   <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
+   <div class="blk wbox"><span class="lab">Wetter nächste Stunden</span><div class="hours">${(w?w.hours:[1,1,3,3,61,1].map((c,i)=>({h:String((n.getHours()+i)%24).padStart(2,"0")+" Uhr",code:c,t:14-Math.floor(i/2)}))).slice(0,6).map(x=>{const [hi]=WMO(x.code,x.day);return`<div><span>${x.h.replace(" Uhr","")}</span><i style="color:${hi==="sun"?"var(--light)":"var(--muted)"}">${ic(hi,20,1.8)}</i><b>${Math.round(x.t)}°</b></div>`}).join("")}</div></div>
    <div class="foot"><button class="conn ${S.mode==="live"?"live":S.mode==="error"?"err":""}" data-open="settings"><i></i>${S.mode==="live"?"Live":S.mode==="error"?"Offline":"Demo"} · v4.8</button>
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
@@ -850,13 +862,13 @@ function hourStacks(){const h=S.hourly||{};let H=h.house,G=h.grid,D=h.dis,C=h.ch
     out.push({s:Math.max(0,hv-bat-g),b:bat,g})}
   return out}
 function hubHTML(){
-  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
+  const n=new Date(),w=S.weather,[wi,wt]=WMO(w?w.code:1,w?w.day:undefined),T=dayTotals(),H=heaters(),ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp)),heiz=H.filter(d=>d.temp>d.cur).length;
   const pv=pvNow(),g=gridNow(),B=batteryInfo(),hum=humOf(S.devices),hc=houseCap(),houseW=hc?Math.max(0,hc.v):null;
-  const hours=(w?w.hours:[]).slice(0,5).map(x=>{const [hi]=WMO(x.code);return`<div><span>${x.h.replace(" Uhr","")}</span>${ic(hi,26,1.8)}<b>${Math.round(x.t)}°</b></div>`}).join("");
+  const hours=(w?w.hours:[]).slice(0,5).map(x=>{const [hi]=WMO(x.code,x.day);return`<div><span>${x.h.replace(" Uhr","")}</span>${ic(hi,26,1.8)}<b>${Math.round(x.t)}°</b></div>`}).join("");
   const days=(w&&w.days?w.days:[]).slice(0,3).map((x,i)=>{const [di]=WMO(x.code);return`<div><span>${i===0?"Heute":i===1?"Morgen":new Date(x.d+"T12:00").toLocaleDateString("de-DE",{weekday:"short"})}</span>${ic(di,24,1.8)}<b>${Math.round(x.max)}°</b><small>${Math.round(x.min)}°</small></div>`}).join("");
   // Kalender
   const C=S.cal||(S.mode==="demo"?{ok:true,days:[{d:"",ev:[{t:"Zahnarzt",w:"16:30–17:15"},{t:"Training",w:"19:00–20:30"}]},{d:"",ev:[{t:"Arbeit – WBL Ware",w:"05:00–13:30"},{t:"Müll: Gelber Sack",w:"ganztägig"}]},{d:"",ev:[{t:"Oma essen",w:"12:45–14:00"}]}]}:null);
-  const evl=a=>a.map(e=>{const all=/ganzt/.test(e.w),[f,t]=all?["ganztags",""]:e.w.split("–");return`<div class="hev"><b>${esc(f||"")}${t?`<i>bis ${esc(t)}</i>`:""}</b><span>${esc(e.t)}</span></div>`}).join("");
+  const evl=a=>a.map(e=>{const all=/ganzt/.test(e.w)||/^\s*00:00\s*[–-]\s*00:00\s*$/.test(e.w),[f,t]=all?["ganztags",""]:e.w.split("–");return`<div class="hev"><b>${esc(f||"")}${t?`<i>bis ${esc(t)}</i>`:""}</b><span>${esc(e.t)}</span></div>`}).join("");
   let cal;
   if(!C)cal=`<div class="hnone">Termine werden geladen …</div>`;
   else if(!C.ok)cal=`<div class="hnone">Kalender nicht verbunden</div>`;
@@ -883,16 +895,16 @@ function hubHTML(){
     <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}</span></div>
     <div class="hsun"><div><i>${ic("rise",30,1.9)}</i><span><small>Aufgang</small><b>${w&&w.sunrise||"–"}</b></span></div><div><i>${ic("set",30,1.9)}</i><span><small>Untergang</small><b>${w&&w.sunset||"–"}</b></span></div></div>
     <div class="hsec">Nächste Stunden</div><div class="hhours">${hours||'<div class="hnone">–</div>'}</div>
-    <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div>${hubDepot()}</div>
+    <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div><div class="hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?`<b style="font-size:inherit;font-weight:700;color:var(--heat)">${heiz} ${heiz>1?"heizen":"heizt"}</b>`:"Heizung aus"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div></div>
    <div class="hcard hcal"><div class="hl">${ic("cal",22,2)}<span>Termine</span></div>${cal}</div>
-   <div class="hcard hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?`<b style="font-size:inherit;font-weight:700;color:var(--heat)">${heiz} ${heiz>1?"heizen":"heizt"}</b>`:"Heizung aus"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div>
+   <div class="hcard hdepot">${hubDepotCard()}</div>
    <div class="hcard hen"><div class="hl">${ic("sun",22,2)}<span>Energie heute</span></div>
     <div class="hkpi"><div><small>Erzeugt</small><b style="color:#ffb547">${sv}<em>${su}</em></b></div><div><small>Verbraucht</small><b style="color:var(--cool)">${uv}<em>${uu}</em></b></div></div>
     <div class="hcmp"><div><i style="width:${(sol||0)/mx*100}%;background:#ffb547"></i></div><div><i style="width:${(use||0)/mx*100}%;background:var(--cool)"></i></div></div>
     <div class="hchart"><div class="hy"><span>${top}</span><span>${top/2}</span><span>0</span></div><div class="hbars">${bars}</div></div><div class="hbl"><span>0</span><span>6</span><span>12</span><span>18</span><span>24 Uhr</span></div>${legend}
     <div class="hrows">
      ${row("sun","Solar jetzt",pv+" W","#ffb547")}
-     ${row("batt","Akku",batt==null?"–":`${batt} %`+(bw?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""),batt!=null&&batt<15?"var(--red)":"var(--green)")}
+     ${(()=>{const dl=S.devices.find(d=>/delta/i.test(d.n)&&d.batt!=null),db=dl?Math.round(dl.batt):null;const parts=[batt!=null?`STREAM ${batt} %`:null,db!=null?`DELTA ${db} %`:null].filter(Boolean);const low=[batt,db].filter(x=>x!=null);return row("batt","Akku",parts.length?parts.join(" · ")+(bw&&parts.length<2?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""):"–",low.length&&Math.max(...low)<15?"var(--red)":"var(--green)")})()}
      ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
      ${row("bolt",g!=null&&g<0?"Einspeisung":"Netz jetzt",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
      ${netTxt?row("bolt","Netzbezug heute",netTxt):""}
@@ -909,6 +921,13 @@ function etoroSpark(w,h,pts,col){if(!pts||pts.length<2)return"";const xs=pts.map
   const P=pts.map(p=>[((p[0]-x0)/Math.max(1,x1-x0)*w).toFixed(1),(h-4-(p[1]-y0)/dy*(h-8)).toFixed(1)]);const d="M"+P.map(p=>p.join(",")).join("L");
   return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%;display:block"><path d="${d}L${w},${h}L0,${h}Z" fill="${col}" opacity=".15"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`}
 function hubDepot(){const e=S.etoro;if(!e)return"";const c=etoroChg(1);return`<div class="hsec">eToro-Depot</div><div class="hdep"><b>${fUSD(e.v)}</b>${c?`<small style="color:${c.d<0?"#ff8a7a":"#7fe04e"}">${sgn(c.d)}${fUSD(Math.abs(c.d))} · 24 h</small>`:""}<div class="hspk">${etoroSpark(300,60,(e.p||[]).slice(-60),c&&c.d<0?"#ff8a7a":"#7fe04e")}</div></div>`}
+function hubDepotCard(){const e=S.etoro;const head=`<div class="hl" style="--acc:#8fb4ff">${ic("trend",22,2)}<span>eToro-Depot</span></div>`;if(!e)return head+`<div class="hnone">Noch keine Daten</div>`;
+  const pts=e.p||[],c=etoroChg(1),first=pts[0],tot=first&&pts.length>1?{d:e.v-first[1],pc:(e.v-first[1])/first[1]*100}:null,col=(tot||c)&&(tot||c).d<0?"#ff8a7a":"#7fe04e";
+  const ys=pts.map(p=>p[1]),lo=Math.min(...ys,e.v),hi=Math.max(...ys,e.v);
+  const chg=x=>x?`<span style="color:${x.d<0?"#ff8a7a":"#7fe04e"}">${sgn(x.d)}${fUSD(Math.abs(x.d))} (${sgn(x.pc)}${Math.abs(x.pc).toFixed(1).replace(".",",")} %)</span>`:"–";
+  const since=first?new Date(first[0]*1000).toLocaleDateString("de-DE",{day:"numeric",month:"numeric"}):"";
+  return head+`<div class="hdtop"><b>${fUSD(e.v)}</b><small>24 h ${chg(c)}${tot?` · seit ${since} ${chg(tot)}`:""}</small></div>
+   <div class="hdch">${pts.length>1?`<div class="hdy"><span>${fUSD(hi)}</span><span>${fUSD(lo)}</span></div><div class="hdline">${etoroSpark(600,200,pts,col)}</div>`:`<div class="hnone">Die Kurve füllt sich ab morgen mit jedem neuen Stand.</div>`}</div>`}
 function depotHTML(){const e=S.etoro;if(!e)return`<div class="sc span3"><span class="lab">eToro-Depot</span><div class="ksub">Noch keine Daten. Der Stand kommt einmal täglich über die Homey-Variable „eToro Verlauf“.</div></div>`;
   const pts=e.p||[],first=pts[0],tot=first?{d:e.v-first[1],pc:(e.v-first[1])/first[1]*100}:null,col=tot&&tot.d<0?"var(--red)":"#7fe04e";
   const k=(lab,c)=>`<div class="sc"><span class="lab">${lab}</span><div class="kv" style="color:${c?c.d<0?"var(--red)":"var(--green)":"inherit"}">${c?sgn(c.d)+fUSD(Math.abs(c.d)):"–"}</div><div class="ksub">${c?`${sgn(c.pc)}${Math.abs(c.pc).toFixed(1).replace(".",",")} %`:"noch zu wenig Verlauf"}</div></div>`;
@@ -985,7 +1004,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.12";
+const APP_VER="4.13";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

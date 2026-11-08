@@ -332,6 +332,7 @@ html.hub .panel{display:block;padding:3vh 3vw}
 html.hub .hhours{margin-top:0}
 .hsec{margin-top:auto;color:var(--muted);font-size:2.1vh;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .hsec+.hhours+.hsec{margin-top:0}
+.hdep{display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:.8vw;background:rgba(255,255,255,.05);border-radius:1.6vh;padding:1vh .8vw}.hdep b{font-size:3.4vh;font-weight:700}.hdep small{font-size:2.2vh;font-weight:600}.hdep .hspk{grid-column:1 / span 2;height:4.5vh;margin-top:.5vh}
 .hdays{display:grid;grid-template-columns:repeat(3,1fr);gap:.8vw}
 .hdays div{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:.6vw;background:rgba(255,255,255,.05);border-radius:1.6vh;padding:1vh .8vw;font-size:2.6vh}
 .hdays span{grid-column:1 / span 2;color:var(--muted);font-weight:600;font-size:2.2vh}
@@ -393,7 +394,7 @@ html.hub .hhours{margin-top:0}
 
 <script>
 
-const P={
+const P={trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
 lamp:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
 socket:'<path d="M8 3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><circle cx="12" cy="12" r="3.5"/><path d="M11 11.2v1.6M13 11.2v1.6"/>',
 speaker:'<rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7.5" r="1"/>',
@@ -519,6 +520,7 @@ async function connect(silent){
     api("/api/manager/users/user/").then(u=>{S.users=Object.values(u).map(x=>({name:x.name,present:x.present,asleep:x.asleep}));render()}).catch(()=>{});
     Promise.all([api("/api/manager/flow/flow/").catch(()=>({})),api("/api/manager/flow/advancedflow/").catch(()=>({}))])
       .then(([a,b])=>{S.flows=[...Object.values(a).map(f=>({id:f.id,name:f.name,adv:false})),...Object.values(b).map(f=>({id:f.id,name:f.name,adv:true}))]});
+    loadEtoro();
     if(!S.dailyAt||Date.now()-S.dailyAt>300000||S.daily!=="ok")loadDaily();else applyDaily();
     if(!silent)toast("Mit Homey verbunden");
   }catch(e){
@@ -714,12 +716,13 @@ function railHTML(){
     <button class="rbtn" id="nightbtn" aria-pressed="${S.night}" aria-label="Nachtmodus">${ic("moon",20)}</button>
     <button class="rbtn" data-open="settings" aria-label="Menü${al.length?`, ${al.length} Hinweise`:""}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>${al.length?`<span class="badge">${al.length}</span>`:""}</button></div>`;
 }
-const CATS={heat:["Heizung","thermo","var(--heat)"],light:["Licht","lamp","var(--light)"],plug:["Steckdosen","socket","var(--plug)"],air:["Air","air","#6fd6ff"],solar:["Solar","sun","#ffb547"]};
+const CATS={heat:["Heizung","thermo","var(--heat)"],light:["Licht","lamp","var(--light)"],plug:["Steckdosen","socket","var(--plug)"],air:["Air","air","#6fd6ff"],solar:["Solar","sun","#ffb547"],depot:["Depot","trend","#8fb4ff"]};
 const isSolarDev=d=>d.t!=="socket"&&!isAir(d)&&(d.gen||d.t==="battery"||d.t==="solar"||/eco ?flow|stream|delta|powerstream|powerocean/i.test(d.n+" "+(d.raw?d.raw.drv:""))||/^BK\d/i.test(d.n));
 const solarDevs=()=>S.devices.filter(isSolarDev);
 function capNum(d,re){let sum=null;Object.entries(d.caps||{}).forEach(([k,c])=>{if(c&&typeof c.value==="number"&&re.test(k+" "+(c.title||""))&&(!c.units||/W$/i.test(c.units)&&!/kW?h/i.test(c.units))){sum=(sum||0)+c.value}});return sum}
 function batAvg(){const b=solarDevs().map(d=>d.batt).filter(x=>x!=null);return b.length?Math.round(b.reduce((a,x)=>a+x,0)/b.length):null}
 function catSummary(k){
+  if(k==="depot"){const e=S.etoro;if(!e)return["–","eToro-Stand noch nicht in Homey"];const c=etoroChg(1);return[fUSD(e.v),[e.pnl!=null?`offen ${sgn(e.pnl)}${fUSD(Math.abs(e.pnl))}`:null,c?`24 h ${sgn(c.d)}${fUSD(Math.abs(c.d))}`:null].filter(Boolean).join(" · ")||"eToro"]}
   if(k==="heat"){const H=heaters(),n=H.filter(d=>d.temp>d.cur).length,ist=avg(H.filter(d=>d.cur!=null).map(d=>d.cur)),soll=avg(H.filter(d=>d.temp!=null).map(d=>d.temp));return[`Ø ${fT(ist)}°`,`${n?`${n} ${n>1?"heizen":"heizt"}`:"Heizung aus"} · Soll ${fT(soll)}°`]}
   if(k==="light"){const L=lamps(),n=L.filter(d=>d.on).length;return[n?`${n} von ${L.length} an`:"alle aus",L.filter(d=>d.on).map(d=>d.n).join(", ")||"Tippen zum Schalten"]}
   if(k==="plug"){const P=plugs(),n=P.filter(d=>d.on).length,w=P.filter(d=>d.on).reduce((a,d)=>a+(d.w||0),0);return[`${n} von ${P.length} an`,`zusammen ${fmtW(Math.round(w))} W`]}
@@ -733,7 +736,7 @@ function segHTML(){
 }
 function homeHTML(){
   return Object.entries(CATS).map(([k,[t,i,c]],ix)=>{const [s1,s2]=catSummary(k);
-    return`<button class="cat${ix>=3?" wide":""}" data-tab="${k}" style="--acc:${c}"><span class="ct"><span class="ci">${ic(i,30,2)}</span><span class="go">${ic("chev",24,2.4)}</span></span><span><h3>${t}</h3><div class="s1">${esc(s1)}</div><div class="s2">${esc(s2)}</div></span></button>`}).join("");
+    return`<button class="cat${ix>=3&&Object.keys(CATS).length===5?" wide":""}" data-tab="${k}" style="--acc:${c}"><span class="ct"><span class="ci">${ic(i,30,2)}</span><span class="go">${ic("chev",24,2.4)}</span></span><span><h3>${t}</h3><div class="s1">${esc(s1)}</div><div class="s2">${esc(s2)}</div></span></button>`}).join("");
 }
 function fmtCap(c){if(typeof c.value==="boolean")return c.value?"Ja":"Nein";let v=c.value;if(typeof v==="number")v=(Math.round(v*10)/10).toString().replace(".",",");return v+(c.units?" "+c.units:"")}
 function capTitle(k,c){const t=c.title;return (typeof t==="string"?t:t&&(t.de||t.en))||k.replace(/_/g," ")}
@@ -833,6 +836,7 @@ function areaHTML(){
   const a=$("#area");
   if(TAB==="home"){a.className="area home";return homeHTML()}
   if(TAB==="solar"){a.className="area solar";return solarHTML()}
+  if(TAB==="depot"){a.className="area solar";return depotHTML()}
   if(TAB==="heat"){const H=heaters();a.className="area c2";return H.map(heatTile).join("")||'<div class="sub">Keine Heizungen gefunden.</div>'}
   if(TAB==="air"){const A=airs();a.className="area c2";return A.map(airTile).join("")||'<div class="sub">Keine Luftgeräte gefunden.</div>'}
   const list=TAB==="light"?lamps():plugs();a.className="area "+cols(list.length);
@@ -879,7 +883,7 @@ function hubHTML(){
     <div class="hwx">${ic(wi,48,1.6)}<b>${w?Math.round(w.t):"–"}°</b><span>${wt}</span></div>
     <div class="hsun"><div><i>${ic("rise",30,1.9)}</i><span><small>Aufgang</small><b>${w&&w.sunrise||"–"}</b></span></div><div><i>${ic("set",30,1.9)}</i><span><small>Untergang</small><b>${w&&w.sunset||"–"}</b></span></div></div>
     <div class="hsec">Nächste Stunden</div><div class="hhours">${hours||'<div class="hnone">–</div>'}</div>
-    <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div></div>
+    <div class="hsec">Vorhersage</div><div class="hdays">${days||'<div class="hnone">–</div>'}</div>${hubDepot()}</div>
    <div class="hcard hcal"><div class="hl">${ic("cal",22,2)}<span>Termine</span></div>${cal}</div>
    <div class="hcard hheat"><span class="ico">${ic("thermo",34,1.8)}</span><b>${fT(ist)}°</b><small>${heiz?`<b style="font-size:inherit;font-weight:700;color:var(--heat)">${heiz} ${heiz>1?"heizen":"heizt"}</b>`:"Heizung aus"}<br><span style="white-space:nowrap">Soll ${fT(soll)}°</span>${hum!=null?` <span style="white-space:nowrap;opacity:.8">· Luft ${Math.round(hum)} %</span>`:""}</small></div>
    <div class="hcard hen"><div class="hl">${ic("sun",22,2)}<span>Energie heute</span></div>
@@ -895,6 +899,23 @@ function hubHTML(){
     </div></div>
   </div>`;
 }
+
+/* ---------- eToro-Depot (v4.12): Homey-Variable "eToro Verlauf", gepflegt vom täglichen Assistenten-Lauf ---------- */
+const fUSD=v=>v==null?"–":v.toLocaleString("de-DE",{minimumFractionDigits:0,maximumFractionDigits:0})+" $";
+const sgn=v=>v<0?"−":"+";
+async function loadEtoro(){try{const all=await api("/api/manager/logic/variable/");const v=Object.values(all||{}).find(x=>x&&x.name==="eToro Verlauf");if(!v||!v.value)return;const d=JSON.parse(v.value);if(d&&d.v!=null){S.etoro=d;render()}}catch(e){}}
+function etoroChg(days){const e=S.etoro;if(!e||!e.p||e.p.length<2)return null;const t0=e.t-days*86400;let b=null;for(const p of e.p){if(p[0]<=t0+1800)b=p;else break}if(!b)return null;return{d:e.v-b[1],pc:(e.v-b[1])/b[1]*100}}
+function etoroSpark(w,h,pts,col){if(!pts||pts.length<2)return"";const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),dy=Math.max(1,y1-y0);
+  const P=pts.map(p=>[((p[0]-x0)/Math.max(1,x1-x0)*w).toFixed(1),(h-4-(p[1]-y0)/dy*(h-8)).toFixed(1)]);const d="M"+P.map(p=>p.join(",")).join("L");
+  return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%;display:block"><path d="${d}L${w},${h}L0,${h}Z" fill="${col}" opacity=".15"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`}
+function hubDepot(){const e=S.etoro;if(!e)return"";const c=etoroChg(1);return`<div class="hsec">eToro-Depot</div><div class="hdep"><b>${fUSD(e.v)}</b>${c?`<small style="color:${c.d<0?"#ff8a7a":"#7fe04e"}">${sgn(c.d)}${fUSD(Math.abs(c.d))} · 24 h</small>`:""}<div class="hspk">${etoroSpark(300,60,(e.p||[]).slice(-60),c&&c.d<0?"#ff8a7a":"#7fe04e")}</div></div>`}
+function depotHTML(){const e=S.etoro;if(!e)return`<div class="sc span3"><span class="lab">eToro-Depot</span><div class="ksub">Noch keine Daten. Der Stand kommt einmal täglich über die Homey-Variable „eToro Verlauf“.</div></div>`;
+  const pts=e.p||[],first=pts[0],tot=first?{d:e.v-first[1],pc:(e.v-first[1])/first[1]*100}:null,col=tot&&tot.d<0?"var(--red)":"#7fe04e";
+  const k=(lab,c)=>`<div class="sc"><span class="lab">${lab}</span><div class="kv" style="color:${c?c.d<0?"var(--red)":"var(--green)":"inherit"}">${c?sgn(c.d)+fUSD(Math.abs(c.d)):"–"}</div><div class="ksub">${c?`${sgn(c.pc)}${Math.abs(c.pc).toFixed(1).replace(".",",")} %`:"noch zu wenig Verlauf"}</div></div>`;
+  const since=first?new Date(first[0]*1000).toLocaleDateString("de-DE",{day:"numeric",month:"numeric"}):"";
+  return`<div class="sc span3"><span class="lab">Kontowert eToro · Stand ${new Date(e.t*1000).toLocaleString("de-DE",{day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})}</span><div class="kv">${fUSD(e.v)}<small>offene Positionen ${e.pnl!=null?sgn(e.pnl)+fUSD(Math.abs(e.pnl)):"–"}</small></div>
+   <div style="height:clamp(120px,30vh,260px)">${pts.length>1?etoroSpark(1000,260,pts,col):'<div class="ksub">Der Verlauf füllt sich ab jetzt mit jedem täglichen Stand.</div>'}</div>${since?`<div class="ksub">Verlauf seit ${since}</div>`:""}</div>
+   ${k("Seit gestern",etoroChg(1))}${k("7 Tage",etoroChg(7))}${k(since?"Seit "+since:"Gesamt",tot)}`}
 /* ---------- Warnung bei ungewöhnlich hohem Verbrauch ---------- */
 const HIGH_ABS=3500,HIGH_MIN=2500,HIGH_FACTOR=4,HIGH_HOLD=180000;
 function powerNow(){const h=houseCap();if(h&&h.v>0)return Math.round(h.v);const m=meterNow();return m!=null&&m>0?m:null}
@@ -964,7 +985,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.11";
+const APP_VER="4.12";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

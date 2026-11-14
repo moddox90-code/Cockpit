@@ -576,7 +576,7 @@ function gridDev(){return S.devices.find(d=>/^BK\d/i.test(d.n)||/smart ?meter|sm
 function ultraDev(){return S.devices.find(d=>/stream\s*ultra/i.test(d.n))||S.devices.find(d=>/stream/i.test(d.n)&&d.t==="battery")}
 function pvSource(){
   const u=ultraDev();
-  if(u){const c=capsOf(u).find(([k,c])=>isW(c)&&/(pv|solar).*(total|sum)|(total|sum).*(pv|solar)/i.test(k))||capsOf(u).find(([k,c])=>isW(c)&&/pv|solar/i.test(k)&&!/limit/i.test(k));if(c)return{d:u,cap:c[0]}}
+  if(u){const c=capsOf(u).find(([k,c])=>isW(c)&&/^stream_unit_power_solar$|^pv_charge_power_total$/.test(k))||capsOf(u).find(([k,c])=>isW(c)&&/(pv|solar).*(total|sum)|(total|sum).*(pv|solar)/i.test(k))||capsOf(u).find(([k,c])=>isW(c)&&/pv|solar/i.test(k)&&!/limit|from_solar|pv\d/i.test(k));if(c)return{d:u,cap:c[0]}}
   const devs=S.devices.filter(d=>d.t!=="socket"&&d!==gridDev()&&(d.gen||d.t==="battery"||/stream|delta|powerstream|ecoflow/i.test(d.n)));
   for(const d of devs){const c=capsOf(d).find(([k,c])=>isW(c)&&/(pv|solar).*(total|sum)|(total|sum).*(pv|solar)/i.test(k));if(c)return{d,cap:c[0]}}
   for(const d of devs){const c=capsOf(d).find(([k,c])=>isW(c)&&/^(measure_power\.)?(pv|solar)$/i.test(k));if(c)return{d,cap:c[0]}}
@@ -586,7 +586,7 @@ function pvSource(){
 function pvNow(){const s=pvSource();if(!s)return 0;const c=s.d.caps&&s.d.caps[s.cap];return Math.max(0,Math.round(c&&typeof c.value==="number"?c.value:(s.d.w||0)))}
 function ultraCap(re,excl){const u=ultraDev();if(!u)return null;const c=capsOf(u).find(([k,c])=>isW(c)&&re.test(k+" "+(c.title||""))&&!/limit|enable|set_/i.test(k)&&!(excl&&excl.test(k)));return c?{d:u,cap:c[0],v:Math.round(c[1].value)}:null}
 const houseCap=()=>ultraCap(/load|house|home|haus|consum|verbrauch/i);
-const gridCap=()=>ultraCap(/grid|netz|mains/i,/feed/i);
+const gridCap=()=>ultraCap(/grid|netz|mains/i,/feed|from_grid/i);
 function meterNow(){const g=gridDev();return g&&g.w!=null?Math.round(g.w):null}
 function gridCheck(){const u=gridCap(),m=meterNow();
   if(u==null&&m==null)return{src:null,v:null,ok:null,u:null,m:null};
@@ -606,7 +606,8 @@ function ultraChg(u){if(!u)return{c:null,d:null};const c=capByTitle(u,/ladeleist
 function batteryInfo(){const u=ultraDev();if(u){const b=ultraBatt(u);if(b!=null)u.batt=b}const b=u&&u.batt!=null?[u]:[];
   const main=b[0];let pw=null;const cd=ultraChg(u);if(cd.c||cd.d)pw=Math.round((cd.c?cd.c.v:0)-(cd.d?cd.d.v:0));
   if(pw!=null)return{main,list:b,pw};
-  if(main){const c=capsOf(main).find(([k,c])=>isW(c)&&/bat/i.test(k)&&/power|watt|charge|discharge/i.test(k)&&!/limit/i.test(k));if(c)pw=Math.round(c[1].value)}
+  if(main&&main.caps&&main.caps.stream_unit_power_battery_flow&&typeof main.caps.stream_unit_power_battery_flow.value==="number")pw=Math.round(main.caps.stream_unit_power_battery_flow.value);
+  else if(main){const c=capsOf(main).find(([k,c])=>isW(c)&&/bat/i.test(k)&&/power|watt|charge|discharge/i.test(k)&&!/limit/i.test(k));if(c)pw=Math.round(c[1].value)}
   return{main,list:b,pw}}
 function integrate(vals){const mid=new Date();mid.setHours(0,0,0,0);const now=Date.now();const H=Array(24).fill(0);
   const pts=vals.map(x=>({t:new Date(x.t).getTime(),v:Math.max(0,+x.v)})).filter(x=>x.t>=mid.getTime()).sort((a,b)=>a.t-b.t);
@@ -626,6 +627,8 @@ async function loadDaily(){
   S.hErr=[];if(src){try{const v=await insightsToday(src.d.id,src.cap);const H=integrate(v);S.solarHist=H.map(x=>Math.round(x));S.pvWh=H.reduce((a,b)=>a+b,0);ok++}catch(e){err=e.message;S.hErr.push("Solar: "+e.message)}}else S.hErr.push("Solar: keine Quelle")
   GRID={};const hc=houseCap();const gm=gridMeters();const cd=ultraChg(ultraDev());
   S.hourly={};
+  {const u=ultraDev(),fl=u&&!cd.c&&!cd.d&&u.caps&&u.caps.stream_unit_power_battery_flow?"stream_unit_power_battery_flow":null;
+   if(fl){try{const v=await insightsToday(u.id,fl);const C=integrate(v),D=integrate(v.map(x=>({t:x.t,v:-x.v})));S.hourly.chg=C;S.hourly.dis=D;GRID.chg=C.reduce((a,b)=>a+b,0)/1000;GRID.dis=D.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}}
   for(const [key,src] of [["chg",cd.c],["dis",cd.d]]){if(!src)continue;try{const v=await insightsToday(ultraDev().id,src.cap);const Hh=integrate(v);S.hourly[key]=Hh;GRID[key]=Hh.reduce((a,b)=>a+b,0)/1000;ok++}catch(e){err=e.message}}
   {const gd=gridDev();if(gd&&gd.caps&&gd.caps.measure_power){try{S.hourly.grid=integrate(await insightsToday(gd.id,"measure_power"))}catch(e){}}}
   for(const key of ["imp","exp"]){const cap=gm[key];if(!cap)continue;try{const v=await insightsToday(gm.g.id,cap);const cur=gm.g.caps[cap]&&gm.g.caps[cap].value;if(v.length&&typeof cur==="number")GRID[key]=Math.max(0,cur-v[0].v);ok++}catch(e){err=e.message}}
@@ -773,10 +776,11 @@ function useChart(){
 /* Energiefluss: Laufgeschwindigkeit = Leistung (aktualisiert mit jedem Homey-Abruf) */
 function efCard(){
   const by=n=>S.devices.find(d=>d.n===n),cv=(d,k)=>d&&d.caps&&d.caps[k]?d.caps[k].value:null;
-  const s=by("STREAM Ultra"),dl=by("DELTA 2 Max"),p=by("Ecoflow"),m=gridDev();
+  const s=ultraDev(),dl=by("DELTA 2 Max"),p=by("Ecoflow"),m=gridDev();
   if(!s&&!dl)return"";
-  const w={pv:cv(s,"pv_charge_power_total"),ac1:cv(s,"enable_ac1")==="true"?(cv(dl,"measure_power.charge_max")||0):0,
-    delta:cv(dl,"measure_power.discharge_max"),inv:p&&p.on?Math.abs(cv(p,"measure_power")||0):0,stream:cv(s,"houseoutput"),grid:m?m.w:null};
+  const ac1on=cv(s,"onoff.ac1")!=null?cv(s,"onoff.ac1")===true:cv(s,"enable_ac1")==="true"||cv(s,"enable_ac1")===true;
+  const w={pv:cv(s,"stream_unit_power_solar")??cv(s,"pv_charge_power_total"),ac1:ac1on?(cv(dl,"measure_power.charge_max")||0):0,
+    delta:cv(dl,"measure_power.discharge_max"),inv:p&&p.on?Math.abs(cv(p,"measure_power")||0):0,stream:cv(s,"measure_power.load")??cv(s,"houseoutput"),grid:m?m.w:null};
   w.house=(+w.stream||0)+(+w.inv||0)+Math.max(0,+w.grid||0);
   const sp=k=>{const x=Math.abs(+w[k]||0);return x<5?'style="opacity:.3"':`style="animation:efrun ${Math.max(.25,Math.min(6,240/x)).toFixed(2)}s linear infinite"`};
   const L=(k,c,d)=>`<path class="efl" ${sp(k)} stroke="${c}" d="${d}"/>`,R=v=>Math.round(+v||0);
@@ -784,7 +788,7 @@ function efCard(){
   ${L("pv","var(--light)","M150 120V200")}${L("ac1","var(--plug)","M240 260H400")}${L("delta","var(--plug)","M560 260H640")}${L("inv","var(--plug)","M760 305V350")}
   ${L("stream","var(--cool)","M150 320V400H440")}${L("inv","var(--cool)","M760 410V400H560")}${L("grid","var(--cool)","M500 345V380")}${L("house","var(--cool)","M500 420V470")}
   <rect class="bx" x="60" y="30" width="180" height="90" rx="14"/><text x="80" y="64">Solar</text><text class="v" x="80" y="92">${R(w.pv)} W · 2×400 W</text>
-  <rect class="bx" x="60" y="200" width="180" height="120" rx="14"/><text x="80" y="234">STREAM Ultra</text><text class="v" x="80" y="262">Akku ${cv(s,"measure_battery_all")??"–"} %</text><text class="v" x="80" y="288">ans Haus ${R(w.stream)} W</text>
+  <rect class="bx" x="60" y="200" width="180" height="120" rx="14"/><text x="80" y="234">STREAM Ultra</text><text class="v" x="80" y="262">Akku ${cv(s,"measure_battery")??cv(s,"measure_battery_all")??"–"} %</text><text class="v" x="80" y="288">ans Haus ${R(w.stream)} W</text>
   <circle cx="320" cy="260" r="26" fill="rgba(255,255,255,.06)" stroke="var(--heat)" stroke-width="3"/><text x="320" y="265" text-anchor="middle" style="font-size:13px">AC1</text>
   <rect class="bx" x="400" y="200" width="160" height="120" rx="14"/><text x="418" y="234">DELTA 2 Max</text><text class="v" x="418" y="262">Akku ${dl?dl.batt??"–":"–"} %</text><text class="v" x="418" y="288">Abgabe ${R(w.delta)} W</text>
   <rect class="bx" x="640" y="215" width="240" height="90" rx="14"/><text x="658" y="249">Wechselrichter</text><text class="v" x="658" y="277">${R(w.inv)} W ins Hausnetz</text>
@@ -1004,7 +1008,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.13";
+const APP_VER="4.14";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();

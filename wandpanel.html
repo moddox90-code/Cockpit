@@ -908,7 +908,7 @@ function hubHTML(){
     <div class="hchart"><div class="hy"><span>${top}</span><span>${top/2}</span><span>0</span></div><div class="hbars">${bars}</div></div><div class="hbl"><span>0</span><span>6</span><span>12</span><span>18</span><span>24 Uhr</span></div>${legend}
     <div class="hrows">
      ${row("sun","Solar jetzt",pv+" W","#ffb547")}
-     ${(()=>{const dl=S.devices.find(d=>/delta/i.test(d.n)&&d.batt!=null),db=dl?Math.round(dl.batt):null;const parts=[batt!=null?`STREAM ${batt} %`:null,db!=null?`DELTA ${db} %`:null].filter(Boolean);const low=[batt,db].filter(x=>x!=null);return row("batt","Akku",parts.length?parts.join(" · ")+(bw&&parts.length<2?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""):"–",low.length&&Math.max(...low)<15?"var(--red)":"var(--green)")})()}
+     ${(()=>{const dl=S.devices.find(d=>/^delta/i.test(d.n)&&d.batt!=null),db=dl?Math.round(dl.batt):null;const parts=[batt!=null?`STREAM ${batt} %`:null,db!=null?`DELTA ${db} %`:null].filter(Boolean);const low=[batt,db].filter(x=>x!=null);return row("batt","Akku",parts.length?parts.join(" · ")+(bw&&parts.length<2?bw>0?` · lädt ${bw} W`:` · entlädt ${-bw} W`:""):"–",low.length&&Math.max(...low)<15?"var(--red)":"var(--green)")})()}
      ${row("home","Haus jetzt",houseW!=null?houseW+" W":"–")}
      ${row("bolt",g!=null&&g<0?"Einspeisung":"Netz jetzt",g!=null?Math.abs(g)+" W":"–","var(--cool)")}
      ${netTxt?row("bolt","Netzbezug heute",netTxt):""}
@@ -1008,7 +1008,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:"&&!sandboxed){navig
 let idleT;const backHome=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{if(TAB!=="home"&&!S.modal){TAB="home";render()}},120000)};
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,backHome,{passive:true}));
 /* Automatisches Update: prüft alle 10 Minuten, ob auf GitHub eine neuere Version liegt */
-const APP_VER="4.14";
+const APP_VER="4.15";
 function checkUpdate(){if(sandboxed||location.protocol!=="https:")return;fetch(location.pathname+"?u="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(h=>{const m=h.match(/APP_VER="([\d.]+)"/);if(m&&m[1]!==APP_VER&&!S.modal){location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,600000);
 render();tick();setInterval(tick,15000);applyWake();
